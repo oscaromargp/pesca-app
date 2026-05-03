@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pesca App - Clima, Mareas y Pronóstico</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎣 Pesca App</h1>
+            <p class="subtitle">Clima + Mareas + Pronóstico de Pesca</p>
+        </header>
+
+        <div class="location-bar">
+            <input type="text" id="coords" placeholder="Lat, Lon (ej: 25.7617, -80.1918)" />
+            <button onclick="searchLocation()">Buscar</button>
+            <button onclick="detectLocation()">📍 Mi ubicación</button>
+        </div>
+
+        <div id="loading" class="loading hidden">Cargando datos...</div>
+
+        <div id="dashboard" class="dashboard hidden">
+            <div class="score-card" id="scoreCard">
+                <h2>Pronóstico de Pesca</h2>
+                <div class="score" id="score">-</div>
+                <div class="score-label" id="scoreLabel">Cargando...</div>
+            </div>
+
+            <div class="grid">
+                <div class="card">
+                    <h3>🌊 Mareas</h3>
+                    <div id="tidesInfo">Cargando...</div>
+                </div>
+
+                <div class="card">
+                    <h3>🌤️ Clima</h3>
+                    <div id="weatherInfo">Cargando...</div>
+                </div>
+
+                <div class="card">
+                    <h3>🌙 Solunar</h3>
+                    <div id="solunarInfo">Cargando...</div>
+                </div>
+
+                <div class="card">
+                    <h3>📍 Ubicación</h3>
+                    <div id="locationInfo">Cargando...</div>
+                </div>
+            </div>
+
+            <div class="card full-width">
+                <h3>🗺️ Mapa de Mareas y Corrientes</h3>
+                <div id="map"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
