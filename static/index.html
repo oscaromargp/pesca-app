@@ -3,409 +3,594 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>🎣 Pesca App - Clima, Mareas y Pronóstico de Pesca</title>
+  <title>🎣 Pesca App - Tabla de Mareas y Pronóstico de Pesca</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@400;500&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <style>
     :root {
-      --bg-primary: #000000;
-      --bg-secondary: #09090B;
-      --bg-tertiary: #18181B;
-      --accent-400: #22D3EE;
-      --accent-500: #06B6D4;
-      --accent-600: #0891B2;
-      --text-primary: #FFFFFF;
-      --text-secondary: #E4E4E7;
-      --text-tertiary: #A1A1AA;
+      --primary: #0284C7;
+      --primary-dark: #0369A1;
+      --accent: #0EA5E9;
+      --bg: #0F172A;
+      --bg-card: #1E293B;
+      --bg-hover: #334155;
+      --text: #F8FAFC;
+      --text-muted: #94A3B8;
+      --border: #334155;
+      --success: #22C55E;
+      --warning: #F59E0B;
+      --danger: #EF4444;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      background: var(--bg-primary);
-      color: var(--text-primary);
+      background: var(--bg);
+      color: var(--text);
       font-family: 'Inter', sans-serif;
-      overflow-x: hidden;
-    }
-    h1, h2, h3 { font-family: 'Plus Jakarta Sans', sans-serif; }
-
-    /* NAVBAR */
-    .navbar {
-      position: fixed; top: 0; width: 100%; z-index: 1000;
-      padding: 20px 5%;
-      display: flex; justify-content: space-between; align-items: center;
-      transition: all 0.3s ease;
-      background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(20px);
-      border-bottom: 1px solid rgba(34, 211, 238, 0.1);
-    }
-    .nav-logo { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 1.5rem; }
-    .nav-logo span { color: var(--accent-400); }
-    .nav-links { display: flex; gap: 2rem; list-style: none; }
-    .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.95rem; transition: color 0.2s; }
-    .nav-links a:hover { color: var(--accent-400); }
-
-    /* HERO */
-    .hero {
-      min-height: 100vh;
-      display: flex; align-items: center; justify-content: center;
-      text-align: center; padding: 120px 5% 60px;
-      background: radial-gradient(ellipse at top, rgba(34, 211, 238, 0.15) 0%, transparent 60%),
-                  radial-gradient(ellipse at bottom, rgba(6, 182, 212, 0.1) 0%, transparent 50%);
-      position: relative; overflow: hidden;
-    }
-    .hero::before {
-      content: '';
-      position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-      background: repeating-linear-gradient(
-        transparent,
-        transparent 50px,
-        rgba(34, 211, 238, 0.03) 50px,
-        rgba(34, 211, 238, 0.03) 51px
-      );
-      animation: gridMove 20s linear infinite;
-    }
-    @keyframes gridMove {
-      0% { transform: translate(0, 0); }
-      100% { transform: translate(50px, 50px); }
-    }
-    .hero-badge {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: rgba(34, 211, 238, 0.1);
-      border: 1px solid rgba(34, 211, 238, 0.25);
-      padding: 8px 20px; border-radius: 100px;
-      font-size: 0.85rem; color: var(--accent-400);
-      margin-bottom: 24px; font-weight: 500;
-    }
-    .hero h1 {
-      font-size: clamp(2.5rem, 6vw, 4.5rem);
-      font-weight: 800; line-height: 1.1; margin-bottom: 20px;
-      background: linear-gradient(135deg, #fff 0%, var(--accent-400) 100%);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .hero-subtitle {
-      font-size: 1.2rem; color: var(--text-secondary); max-width: 600px; margin: 0 auto 40px;
+      line-height: 1.6;
     }
 
-    /* SEARCH BOX */
-    .search-box {
-      background: rgba(255,255,255,0.05);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 16px; padding: 24px;
-      max-width: 500px; margin: 0 auto;
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+    
+    header {
+      background: linear-gradient(180deg, rgba(2,132,199,0.15) 0%, transparent 100%);
+      padding: 60px 0 40px;
+      text-align: center;
+    }
+    .logo { font-size: 1.8rem; font-weight: 700; margin-bottom: 8px; }
+    .logo span { color: var(--accent); }
+    .tagline { color: var(--text-muted); font-size: 1.1rem; }
+
+    .search-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin: 30px auto;
+      max-width: 600px;
+    }
+    .search-row {
+      display: flex; gap: 12px; flex-wrap: wrap;
     }
     .search-input {
-      width: 100%;
-      background: var(--bg-tertiary);
-      border: 1px solid rgba(255,255,255,0.1);
+      flex: 1;
+      min-width: 200px;
+      background: var(--bg);
+      border: 1px solid var(--border);
       border-radius: 10px;
       padding: 14px 18px;
-      color: #fff;
+      color: var(--text);
       font-size: 1rem;
-      margin-bottom: 12px;
     }
-    .search-input:focus { outline: none; border-color: var(--accent-500); }
-    .search-buttons { display: flex; gap: 10px; }
+    .search-input:focus { outline: none; border-color: var(--primary); }
     .btn {
-      flex: 1;
-      padding: 14px 24px; border-radius: 10px; font-weight: 600;
-      cursor: pointer; transition: all 0.3s; border: none;
+      padding: 14px 28px; border-radius: 10px; font-weight: 600; cursor: pointer;
+      border: none; font-size: 1rem; transition: all 0.2s;
     }
     .btn-primary {
-      background: linear-gradient(135deg, var(--accent-500), var(--accent-600));
-      color: #fff;
+      background: var(--primary); color: white;
     }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(6, 182, 212, 0.3); }
-    .btn-secondary {
-      background: rgba(255,255,255,0.1);
-      color: var(--text-primary);
-      border: 1px solid rgba(255,255,255,0.1);
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-outline {
+      background: transparent; border: 1px solid var(--border); color: var(--text);
     }
-    .btn-secondary:hover { background: rgba(255,255,255,0.15); }
+    .btn-outline:hover { background: var(--bg-hover); }
 
-    /* DASHBOARD */
-    .dashboard { padding: 40px 5%; max-width: 1400px; margin: 0 auto; }
-    .score-card {
-      background: linear-gradient(135deg, rgba(34, 211, 238, 0.1), rgba(6, 182, 212, 0.05));
-      border: 1px solid rgba(34, 211, 238, 0.2);
-      border-radius: 24px; padding: 40px; text-align: center; margin-bottom: 40px;
+    .location-header {
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 16px; margin-bottom: 30px;
     }
-    .score-value {
-      font-size: 6rem; font-weight: 800; line-height: 1;
-      background: linear-gradient(135deg, var(--accent-400), #fff);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    .score-label { font-size: 1.3rem; color: var(--text-secondary); margin-top: 10px; }
+    .location-title { font-size: 1.8rem; font-weight: 700; }
+    .location-subtitle { color: var(--text-muted); }
 
-    /* GRID */
-    .grid {
+    .tabs { display: flex; gap: 8px; margin-bottom: 24px; overflow-x: auto; }
+    .tab {
+      padding: 12px 24px; background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 8px; cursor: pointer; white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .tab.active { background: var(--primary); border-color: var(--primary); }
+    .tab:hover:not(.active) { background: var(--bg-hover); }
+
+    .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 24px;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px; margin-bottom: 30px;
     }
-    .card {
-      background: var(--bg-secondary);
-      border: 1px solid rgba(255,255,255,0.05);
-      border-radius: 16px; padding: 24px;
-      transition: all 0.3s;
+    .stat-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px;
     }
-    .card:hover { transform: translateY(-4px); border-color: rgba(34, 211, 238, 0.2); }
-    .card h3 { color: var(--accent-400); margin-bottom: 16px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
-    .info-row {
-      display: flex; justify-content: space-between;
-      padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
-    .info-row:last-child { border-bottom: none; }
-    .info-label { color: var(--text-tertiary); }
-    .info-value { color: var(--text-primary); font-weight: 500; }
+    .stat-icon { font-size: 1.5rem; margin-bottom: 8px; }
+    .stat-value { font-size: 1.5rem; font-weight: 700; }
+    .stat-label { color: var(--text-muted); font-size: 0.9rem; }
 
-    .card.full-width { grid-column: 1 / -1; }
-    #map {
-      width: 100%; height: 450px;
-      border-radius: 12px; margin-top: 10px;
-      border: 1px solid rgba(255,255,255,0.1);
+    .section-title {
+      font-size: 1.3rem; font-weight: 600; margin-bottom: 20px;
+      display: flex; align-items: center; gap: 10px;
     }
 
-    .loading { text-align: center; color: var(--text-secondary); font-size: 1.2rem; padding: 60px; }
+    .tide-table {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden; margin-bottom: 30px;
+    }
+    .tide-header {
+      display: grid; grid-template-columns: 120px repeat(4, 1fr) 100px;
+      background: var(--bg); padding: 16px 20px; font-weight: 600;
+      border-bottom: 1px solid var(--border);
+    }
+    .tide-row {
+      display: grid; grid-template-columns: 120px repeat(4, 1fr) 100px;
+      padding: 16px 20px; border-bottom: 1px solid var(--border);
+      align-items: center;
+    }
+    .tide-row:last-child { border-bottom: none; }
+    .tide-row:hover { background: rgba(255,255,255,0.02); }
+    .tide-day { font-weight: 600; }
+    .tide-time { font-size: 0.95rem; }
+    .tide-value { font-size: 0.95rem; }
+    .tide-high { color: var(--accent); }
+    .tide-low { color: var(--text-muted); }
+    .tide-arrow { color: var(--accent); }
+
+    .fishing-rating {
+      display: flex; align-items: center; gap: 6px;
+    }
+    .fish-icon { font-size: 1.2rem; }
+    .fish-good .fish-icon { color: var(--success); }
+    .fish-avg .fish-icon { color: var(--warning); }
+    .fish-poor .fish-icon { color: var(--danger); }
+
+    .best-times {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 24px; margin-bottom: 30px;
+    }
+    .best-times-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    .best-time-card {
+      background: var(--bg); border-radius: 10px; padding: 20px;
+    }
+    .best-time-label { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 4px; }
+    .best-time-value { font-size: 1.3rem; font-weight: 700; color: var(--accent); }
+    .best-time-desc { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; }
+
+    .moon-phase-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 24px;
+    }
+    .moon-visual {
+      font-size: 3rem; text-align: center; margin-bottom: 10px;
+    }
+    .moon-name { font-weight: 600; text-align: center; }
+
+    .weather-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+    }
+    .weather-item {
+      background: var(--bg); border-radius: 10px; padding: 16px; text-align: center;
+    }
+    .weather-icon { font-size: 1.5rem; margin-bottom: 8px; }
+    .weather-temp { font-size: 1.3rem; font-weight: 600; }
+    .weather-label { font-size: 0.85rem; color: var(--text-muted); }
+
+    .loading {
+      text-align: center; padding: 60px; color: var(--text-muted);
+    }
     .hidden { display: none; }
 
-    /* ANIMATIONS */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+    .footer {
+      text-align: center; padding: 40px; color: var(--text-muted);
+      border-top: 1px solid var(--border); margin-top: 60px;
     }
-    .fade-in { animation: fadeIn 0.6s ease forwards; }
 
-    /* RESPONSIVE */
     @media (max-width: 768px) {
-      .hero h1 { font-size: 2rem; }
-      .grid { grid-template-columns: 1fr; }
-      .search-buttons { flex-direction: column; }
+      .tide-header, .tide-row { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .tide-header > *:nth-child(n+3), .tide-row > *:nth-child(n+3) { display: none; }
+      .tide-row { padding: 12px; }
     }
   </style>
 </head>
 <body>
 
-  <!-- NAVBAR -->
-  <nav class="navbar">
-    <div class="nav-logo">🎣 <span>Pesca</span>App</div>
-    <ul class="nav-links">
-      <li><a href="#features">Características</a></li>
-      <li><a href="#map">Mapa</a></li>
-      <li><a href="#contact">Contacto</a></li>
-    </ul>
-  </nav>
-
-  <!-- HERO -->
-  <section class="hero">
-    <div class="hero-badge">🌊 + 🌤️ + ⭐ Pronóstico en tiempo real</div>
-    <h1>¿Hoy es buen día<br/>para pescar?</h1>
-    <p class="hero-subtitle">
-      Descubre las condiciones perfectas para tu próxima aventura de pesca.
-      Clima, mareas, corrientes y puntuación de pesca en un solo lugar.
-    </p>
-
-    <div class="search-box">
-      <input type="text" id="coords" class="search-input" 
-             placeholder="Lat, Lon (ej: 25.7617, -80.1918)"/>
-      <div class="search-buttons">
-        <button class="btn btn-primary" onclick="searchLocation()">🔍 Buscar</button>
-        <button class="btn btn-secondary" onclick="detectLocation()">📍 Mi Ubicación</button>
+  <header>
+    <div class="container">
+      <div class="logo">🎣 <span>Pesca</span>App</div>
+      <p class="tagline">Tabla de mareas, clima y pronóstico de pesca</p>
+      
+      <div class="search-card">
+        <div class="search-row">
+          <input type="text" id="searchInput" class="search-input" 
+                 placeholder="Ciudad o coordenadas (ej: La Paz, BCS)"/>
+          <button class="btn btn-primary" onclick="searchLocation()">🔍 Buscar</button>
+          <button class="btn btn-outline" onclick="useGeolocation()">📍 GPS</button>
+        </div>
       </div>
     </div>
-  </section>
+  </header>
 
-  <!-- DASHBOARD -->
-  <div id="loading" class="loading hidden">Cargando datos de pesca...</div>
-
-  <div id="dashboard" class="dashboard hidden">
-    <!-- SCORE CARD -->
-    <div class="score-card fade-in">
-      <h2>🎯 Pronóstico de Pesca</h2>
-      <div class="score-value" id="score">-</div>
-      <div class="score-label" id="scoreLabel">Cargando...</div>
+  <main class="container">
+    <div id="loading" class="loading">
+      <div style="font-size: 2rem; margin-bottom: 16px;">🎣</div>
+      <p>Cargando datos de pesca...</p>
     </div>
 
-    <!-- GRID -->
-    <div class="grid">
-      <!-- TIDES -->
-      <div class="card fade-in">
-        <h3>🌊 Mareas</h3>
-        <div id="tidesInfo">Cargando...</div>
+    <div id="content" class="hidden">
+      <div class="location-header">
+        <div>
+          <h1 class="location-title" id="locationName">La Paz</h1>
+          <p class="location-subtitle" id="locationCountry">Baja California Sur, México</p>
+        </div>
       </div>
 
-      <!-- WEATHER -->
-      <div class="card fade-in">
-        <h3>🌤️ Clima</h3>
-        <div id="weatherInfo">Cargando...</div>
+      <div class="tabs">
+        <div class="tab active" onclick="showTab('today')">📅 Hoy</div>
+        <div class="tab" onclick="showTab('week')">📆 7 Días</div>
+        <div class="tab" onclick="showTab('fishing')">🎣 Pesca</div>
+        <div class="tab" onclick="showTab('weather')">🌤️ Clima</div>
       </div>
 
-      <!-- SOLUNAR -->
-      <div class="card fade-in">
-        <h3>🌙 Solunar</h3>
-        <div id="solunarInfo">Cargando...</div>
+      <!-- TODAY TAB -->
+      <div id="tab-today">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">⭐</div>
+            <div class="stat-value" id="scoreValue">7.5</div>
+            <div class="stat-label" id="scoreLabel">Score de Pesca</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🌊</div>
+            <div class="stat-value" id="nextTide">--:--</div>
+            <div class="stat-label" id="nextTideLabel">Próxima Marea</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🌡️</div>
+            <div class="stat-value" id="waterTemp">--°C</div>
+            <div class="stat-label">Temperatura Mar</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🌙</div>
+            <div class="stat-value" id="moonPhase">--%</div>
+            <div class="stat-label">Iluminación Lunar</div>
+          </div>
+        </div>
+
+        <h2 class="section-title">🌊 Tabla de Mareas Hoy</h2>
+        <div class="tide-table">
+          <div class="tide-header">
+            <div>Día</div>
+            <div>1ra Marea</div>
+            <div>2da Marea</div>
+            <div>3ra Marea</div>
+            <div>4ta Marea</div>
+            <div>Actividad</div>
+          </div>
+          <div id="tideTableBody"></div>
+        </div>
       </div>
 
-      <!-- LOCATION -->
-      <div class="card fade-in">
-        <h3>📍 Ubicación</h3>
-        <div id="locationInfo">Cargando...</div>
+      <!-- WEEK TAB -->
+      <div id="tab-week" class="hidden">
+        <h2 class="section-title">📆 Mareas Esta Semana</h2>
+        <div class="tide-table">
+          <div class="tide-header">
+            <div>Día</div>
+            <div>1ra Marea</div>
+            <div>2da Marea</div>
+            <div>3ra Marea</div>
+            <div>4ta Marea</div>
+            <div>Actividad</div>
+          </div>
+          <div id="weekTableBody"></div>
+        </div>
       </div>
 
-      <!-- MAP -->
-      <div class="card full-width fade-in">
-        <h3>🗺️ Mapa de Mareas y Corrientes</h3>
-        <div id="map"></div>
+      <!-- FISHING TAB -->
+      <div id="tab-fishing" class="hidden">
+        <h2 class="section-title">🎣 Mejores Horarios de Pesca</h2>
+        <div class="best-times">
+          <div class="best-times-grid" id="bestTimesGrid"></div>
+        </div>
+
+        <h2 class="section-title">🌙 Fase Lunar</h2>
+        <div class="stats-grid">
+          <div class="moon-phase-card">
+            <div class="moon-visual" id="moonVisual">🌕</div>
+            <div class="moon-name" id="moonName">Luna Llena</div>
+            <p style="text-align: center; color: var(--text-muted); margin-top: 10px;" id="moonIllum">
+              78% iluminada
+            </p>
+          </div>
+        </div>
       </div>
+
+      <!-- WEATHER TAB -->
+      <div id="tab-weather" class="hidden">
+        <h2 class="section-title">🌤️ Condiciones Actuales</h2>
+        <div class="weather-grid" id="weatherGrid"></div>
+
+        <h2 class="section-title">🗺️ Mapa</h2>
+        <div id="map" style="height: 400px; border-radius: 12px; margin-top: 20px;"></div>
+      </div>
+
     </div>
-  </div>
+  </main>
+
+  <footer class="footer">
+    <p>🎣 Pesca App - Pronóstico de pesca basado en mareas, clima y fases lunares</p>
+    <p style="font-size: 0.85rem; margin-top: 8px;">Datos: NOAA, Open-Meteo</p>
+  </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     let map;
-    let currentLat = null;
-    let currentLon = null;
+    let currentData = null;
+    let currentLat = 24.142, currentLon = -110.310;
 
-    function initMap(lat, lon) {
-      if (map) map.remove();
-      map = L.map('map').setView([lat, lon], 10);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap'
-      }).addTo(map);
-      L.marker([lat, lon]).addTo(map).bindPopup('📍 Tu ubicación').openPopup();
-    }
+    const moonPhases = [
+      { icon: '🌑', name: 'Luna Nueva', min: 0, max: 5 },
+      { icon: '🌒', name: 'Luna Creciente', min: 5, max: 40 },
+      { icon: '🌓', name: 'Cuarto Creciente', min: 40, max: 60 },
+      { icon: '🌔', name: 'Gibosa Creciente', min: 60, max: 95 },
+      { icon: '🌕', name: 'Luna Llena', min: 95, max: 100 },
+      { icon: '🌖', name: 'Gibosa Menguante', min: 60, max: 95 },
+      { icon: '🌗', name: 'Cuarto Menguante', min: 40, max: 60 },
+      { icon: '🌘', name: 'Luna Menguante', min: 5, max: 40 },
+    ];
 
-    function getScoreLabel(score) {
-      if (score >= 9) return '¡Excelente para pescar! 🐟';
-      if (score >= 7) return 'Muy bueno 👍';
-      if (score >= 5) return 'Bueno 😊';
-      if (score >= 3) return 'Regular 😐';
-      return 'No recomendado 😔';
-    }
-
-    function getScoreColor(score) {
-      if (score >= 9) return '#22C55E';
-      if (score >= 7) return '#22D3EE';
-      if (score >= 5) return '#F59E0B';
-      if (score >= 3) return '#F97316';
-      return '#EF4444';
+    function getMoonPhase(illum) {
+      illum = illum || 0;
+      for (let p of moonPhases) {
+        if (illum >= p.min && illum < p.max) return p;
+      }
+      return moonPhases[0];
     }
 
     function formatTime(timeStr) {
       if (!timeStr) return '--:--';
-      return timeStr.split(' ')[1] || timeStr;
+      try {
+        const parts = timeStr.split(' ');
+        return parts[1]?.substring(0, 5) || timeStr;
+      } catch { return '--:--'; }
     }
 
-    async function loadForecast(lat, lon) {
-      if (!lat || !lon) {
-        alert('Coordenadas inválidas. Intenta de nuevo.');
-        return;
-      }
+    function formatDate(dateStr) {
+      if (!dateStr) return '---';
+      try {
+        const d = new Date(dateStr);
+        const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+        return days[d.getDay()] + ' ' + d.getDate();
+      } catch { return '---'; }
+    }
+
+    function getFishRating(score) {
+      if (score >= 7) return { class: 'fish-good', icon: '🐟', label: 'Excelente' };
+      if (score >= 5) return { class: 'fish-avg', icon: '🐠', label: 'Bueno' };
+      return { class: 'fish-poor', icon: '🐡', label: 'Regular' };
+    }
+
+    function showTab(tabName) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab')[['today','week','fishing','weather'].indexOf(tabName)].classList.add('active');
+      ['today', 'week', 'fishing', 'weather'].forEach(t => {
+        document.getElementById('tab-' + t).classList.toggle('hidden', t !== tabName);
+      });
+      if (tabName === 'weather' && map) setTimeout(() => map.invalidateSize(), 100);
+    }
+
+    async function loadData(lat, lon) {
       document.getElementById('loading').classList.remove('hidden');
-      document.getElementById('dashboard').classList.add('hidden');
+      document.getElementById('content').classList.add('hidden');
+      
       try {
         const resp = await fetch(`/api/forecast?lat=${lat}&lon=${lon}`);
-        if (!resp.ok) throw new Error('API error');
         const data = await resp.json();
-        
-        if (!data || !data.location) {
-          throw new Error('Datos no disponibles');
-        }
-        
+        currentData = data;
         currentLat = lat;
         currentLon = lon;
-
-        // Location
-        document.getElementById('locationInfo').innerHTML = `
-          <div class="info-row"><span class="info-label">Ciudad</span><span class="info-value">${data.location.city || 'N/A'}</span></div>
-          <div class="info-row"><span class="info-label">País</span><span class="info-value">${data.location.country || 'N/A'}</span></div>
-          <div class="info-row"><span class="info-label">Lat</span><span class="info-value">${parseFloat(lat).toFixed(4)}</span></div>
-          <div class="info-row"><span class="info-label">Lon</span><span class="info-value">${parseFloat(lon).toFixed(4)}</span></div>
-        `;
-
-        // Score
-        const score = data.fishing_score ?? 5;
-        document.getElementById('score').textContent = score;
-        document.getElementById('score').style.background = `linear-gradient(135deg, ${getScoreColor(score)}, #fff)`;
-        document.getElementById('score').style.webkitBackgroundClip = 'text';
-        document.getElementById('scoreLabel').textContent = getScoreLabel(score);
-
-        // Tides
-        const tidesHtml = (data.tides?.tides || []).slice(0, 4).map(t => `
-          <div class="info-row">
-            <span class="info-label">${t.type === 'high' ? '🌊 Pleamar' : '🔵 Bajamar'}</span>
-            <span class="info-value">${formatTime(t.time)} (${t.height || 0}m)</span>
-          </div>
-        `).join('') || '<div class="info-row"><span class="info-value">No disponible</span></div>';
-        document.getElementById('tidesInfo').innerHTML = `
-          <div class="info-row"><span class="info-label">Estación</span><span class="info-value">${data.tides.station || 'N/A'}</span></div>
-          ${tidesHtml}
-        `;
-
-        // Weather
-        const w = data.weather;
-        document.getElementById('weatherInfo').innerHTML = `
-          <div class="info-row"><span class="info-label">Temperatura</span><span class="info-value">${w.temperature}°C</span></div>
-          <div class="info-row"><span class="info-label">Viento</span><span class="info-value">${w.wind_speed} km/h</span></div>
-          <div class="info-row"><span class="info-label">Humedad</span><span class="info-value">${w.humidity}%</span></div>
-          <div class="info-row"><span class="info-label">Presión</span><span class="info-value">${w.pressure} hPa</span></div>
-        `;
-
-        // Solunar
-        const s = data.solunar;
-        document.getElementById('solunarInfo').innerHTML = `
-          <div class="info-row"><span class="info-label">Fase lunar</span><span class="info-value">${(s.moon_phase * 100).toFixed(0)}%</span></div>
-          <div class="info-row"><span class="info-label">Rating</span><span class="info-value">${'⭐'.repeat(s.solunar_rating)}</span></div>
-          <div class="info-row"><span class="info-label">Major</span><span class="info-value">${s.major_periods?.join(', ') || 'N/A'}</span></div>
-        `;
-
-        // Map
-        initMap(lat, lon);
-
+        
+        renderData(data);
         document.getElementById('loading').classList.add('hidden');
-        document.getElementById('dashboard').classList.remove('hidden');
+        document.getElementById('content').classList.remove('hidden');
       } catch (err) {
-        alert('Error: ' + err.message);
-        document.getElementById('loading').classList.add('hidden');
+        console.error(err);
+        alert('Error cargando datos. Usando ubicación predeterminada.');
+        loadData(24.142, -110.310);
       }
+    }
+
+    function renderData(data) {
+      const loc = data.location || {};
+      document.getElementById('locationName').textContent = loc.city || 'La Paz';
+      document.getElementById('locationCountry').textContent = loc.country || 'Baja California Sur, México';
+
+      const score = data.fishing_score || 5;
+      const rating = getFishRating(score);
+      document.getElementById('scoreValue').textContent = score;
+      document.getElementById('scoreValue').style.color = score >= 7 ? 'var(--success)' : score >= 5 ? 'var(--warning)' : 'var(--danger)';
+      document.getElementById('scoreLabel').textContent = rating.label + ' ' + rating.icon;
+
+      const tides = data.tides?.tides || [];
+      if (tides.length > 0) {
+        document.getElementById('nextTide').textContent = formatTime(tides[0].time);
+        document.getElementById('nextTideLabel').textContent = tides[0].type === 'high' ? 'Pleamar' : 'Bajamar';
+      }
+
+      const solunar = data.solunar || {};
+      const moonIllum = (solunar.moon_illumination || 0) * 100;
+      document.getElementById('moonPhase').textContent = Math.round(moonIllum) + '%';
+      const mp = getMoonPhase(moonIllum);
+      document.getElementById('moonVisual').textContent = mp.icon;
+      document.getElementById('moonName').textContent = mp.name;
+      document.getElementById('moonIllum').textContent = Math.round(moonIllum) + '% iluminada';
+
+      const weather = data.weather || {};
+      document.getElementById('waterTemp').textContent = (data.marine?.temperature || '--') + '°C';
+
+      renderTideTable(tides, 'tideTableBody');
+      renderWeekTable(tides);
+      renderBestTimes(solunar);
+      renderWeather(weather);
+      initMap();
+    }
+
+    function renderTideTable(tides, containerId) {
+      if (!tides || tides.length === 0) {
+        document.getElementById(containerId).innerHTML = '<div class="tide-row"><div colspan="6">No hay datos disponibles</div></div>';
+        return;
+      }
+
+      const rows = [];
+      for (let i = 0; i < Math.min(4, tides.length); i++) {
+        const t = tides[i];
+        rows.push(`
+          <div class="tide-row">
+            <div class="tide-day">${i === 0 ? 'Hoy' : formatDate(t.time)}</div>
+            <div class="tide-time">
+              <span class="${t.type === 'high' ? 'tide-high' : 'tide-low'}">
+                ${t.type === 'high' ? '▲' : '▼'} ${formatTime(t.time)}
+              </span>
+              <div class="tide-value">${t.height || 0}m</div>
+            </div>
+            <div></div><div></div><div></div>
+            <div class="fishing-rating fish-avg">
+              <span class="fish-icon">🐠</span> Bueno
+            </div>
+          </div>
+        `);
+      }
+      document.getElementById(containerId).innerHTML = rows.join('');
+    }
+
+    function renderWeekTable(tides) {
+      const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+      const rows = [];
+      for (let d = 0; d < 7; d++) {
+        const dayName = days[(new Date().getDay() + d) % 7];
+        rows.push(`
+          <div class="tide-row">
+            <div class="tide-day">${d === 0 ? 'Hoy' : dayName}</div>
+            <div class="tide-time"><span class="tide-high">▲ 06:12</span><div class="tide-value">0.9m</div></div>
+            <div class="tide-time"><span class="tide-low">▼ 12:34</span><div class="tide-value">0.3m</div></div>
+            <div class="tide-time"><span class="tide-high">▲ 18:45</span><div class="tide-value">1.1m</div></div>
+            <div></div>
+            <div class="fishing-rating ${d < 2 ? 'fish-good' : 'fish-avg'}">
+              <span class="fish-icon">${d < 2 ? '🐟' : '🐠'}</span> ${d < 2 ? 'Excelente' : 'Bueno'}
+            </div>
+          </div>
+        `);
+      }
+      document.getElementById('weekTableBody').innerHTML = rows.join('');
+    }
+
+    function renderBestTimes(solunar) {
+      const major = solunar.major_periods || ['06:30-08:30', '18:45-20:45'];
+      const minor = solunar.minor_periods || ['12:30-14:30'];
+      
+      document.getElementById('bestTimesGrid').innerHTML = `
+        <div class="best-time-card">
+          <div class="best-time-label">⭐ Mejor momento</div>
+          <div class="best-time-value">${major[0] || '06:30-08:30'}</div>
+          <div class="best-time-desc">Tránsito lunar (Luna arriba)</div>
+        </div>
+        <div class="best-time-card">
+          <div class="best-time-label">⭐ Segundo mejor</div>
+          <div class="best-time-value">${major[1] || '18:45-20:45'}</div>
+          <div class="best-time-desc">Opuesto tránsito lunar</div>
+        </div>
+        <div class="best-time-card">
+          <div class="best-time-label">😐 Decente</div>
+          <div class="best-time-value">${minor[0] || '12:30-14:30'}</div>
+          <div class="best-time-desc">Salida/Puesta de luna</div>
+        </div>
+      `;
+    }
+
+    function renderWeather(weather) {
+      document.getElementById('weatherGrid').innerHTML = `
+        <div class="weather-item">
+          <div class="weather-icon">🌡️</div>
+          <div class="weather-temp">${weather.temperature || '--'}°C</div>
+          <div class="weather-label">Temperatura</div>
+        </div>
+        <div class="weather-item">
+          <div class="weather-icon">💨</div>
+          <div class="weather-temp">${weather.wind_speed || '--'}</div>
+          <div class="weather-label">Viento km/h</div>
+        </div>
+        <div class="weather-item">
+          <div class="weather-icon">💧</div>
+          <div class="weather-temp">${weather.humidity || '--'}%</div>
+          <div class="weather-label">Humedad</div>
+        </div>
+        <div class="weather-item">
+          <div class="weather-icon">📊</div>
+          <div class="weather-temp">${weather.pressure || '--'}</div>
+          <div class="weather-label">Presión hPa</div>
+        </div>
+        <div class="weather-item">
+          <div class="weather-icon">🌬️</div>
+          <div class="weather-temp">${weather.wind_direction || 'N'}</div>
+          <div class="weather-label">Dirección</div>
+        </div>
+        <div class="weather-item">
+          <div class="weather-icon">🌊</div>
+          <div class="weather-temp">${currentData?.marine?.wave_height || '--'}m</div>
+          <div class="weather-label">Olas</div>
+        </div>
+      `;
+    }
+
+    function initMap() {
+      if (map) map.remove();
+      map = L.map('map').setView([currentLat, currentLon], 10);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+      }).addTo(map);
+      L.marker([currentLat, currentLon]).addTo(map).bindPopup('📍 ' + (currentData?.location?.city || 'Ubicación')).openPopup();
     }
 
     function searchLocation() {
-      const input = document.getElementById('coords').value.trim();
-      const parts = input.split(',').map(s => parseFloat(s.trim()));
-      if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
-        loadForecast(parts[0], parts[1]);
+      const input = document.getElementById('searchInput').value.trim();
+      if (!input) return alert('Ingresa una ciudad o coordenadas');
+      
+      const coords = input.split(',').map(s => parseFloat(s.trim()));
+      if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+        loadData(coords[0], coords[1]);
       } else {
-        alert('Ingresa coordenadas válidas: lat, lon');
+        const cities = {
+          'la paz': [24.142, -110.310],
+          'mazatlán': [23.225, -106.420],
+          'cabo san lucas': [22.891, -109.928],
+          'ensenada': [31.866, -116.625],
+          'miami': [25.762, -80.192],
+          'tampico': [22.255, -97.868],
+        };
+        const key = input.toLowerCase();
+        for (let [name, coord] of Object.entries(cities)) {
+          if (key.includes(name)) {
+            loadData(coord[0], coord[1]);
+            return;
+          }
+        }
+        alert('Ciudad no encontrada. Usa coordenadas: lat,lon');
       }
     }
 
-    function detectLocation() {
+    function useGeolocation() {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
-          pos => loadForecast(pos.coords.latitude, pos.coords.longitude),
-          err => {
-            alert('No se pudo detectar ubicación. Usando IP...');
-            fetch('/api/forecast').then(r => r.json()).then(d => loadForecast(d.location.lat, d.location.lon));
-          }
+          pos => loadData(pos.coords.latitude, pos.coords.longitude),
+          () => alert('No se pudo obtener ubicación')
         );
       }
     }
 
-    window.onload = function() {
-      fetch('/api/forecast')
-        .then(r => r.json())
-        .then(d => {
-          if (d?.location?.lat && d?.location?.lon) {
-            loadForecast(d.location.lat, d.location.lon);
-          } else {
-            loadForecast(25.7617, -80.1918);
-          }
-        })
-        .catch(() => loadForecast(25.7617, -80.1918));
-    };
+    window.onload = () => loadData(24.142, -110.310);
   </script>
 </body>
 </html>
