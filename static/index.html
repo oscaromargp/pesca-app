@@ -195,8 +195,10 @@
     }
   </style>
 </head>
-<body>
+<body onload="document.getElementById('jsStatus').innerText='JS loaded OK'">
 
+  <div id="jsStatus" style="position:fixed;top:0;left:0;background:red;color:white;z-index:9999;padding:4px">⚠️ JS not loaded</div>
+  
   <header>
     <div class="container">
       <div class="logo">🎣 <span>Pesca</span>App</div>
@@ -651,7 +653,12 @@ function renderWeather(w) {
       }
     }
 
-    window.onload = () => loadData(24.142, -110.310);
+    window.onload = () => {
+      document.getElementById('jsStatus').style.background = 'green';
+      document.getElementById('jsStatus').innerText = '✅ JS running';
+      document.getElementById('jsStatus').style.display = 'none';
+      loadData(24.142, -110.310);
+    };
   </script>
 </body>
 </html>
