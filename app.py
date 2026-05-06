@@ -53,28 +53,48 @@ def forecast():
     - /api/forecast?city=La+Paz
     - /api/forecast (usa IP)
     """
-    lat = request.args.get('lat', type=float)
-    lon = request.args.get('lon', type=float)
-    city = request.args.get('city')
-    ip = request.args.get('ip')
-    
-    # 1. Resolver ubicación
-    if city:
-        result = geocode_city(city)
-        if result:
-            lat = result.get("lat")
-            lon = result.get("lon")
-    
-    if lat is None or lon is None:
-        location = get_location_from_ip(ip)
-        lat = location.get("lat")
-        lon = location.get("lon")
-    
-    # 2. Obtener todos los datos
-    tides_data = get_tides(lat, lon)
-    weather_data = get_weather(lat, lon)
-    marine_data = get_marine_weather(lat, lon)
-    solunar_data = get_solunar_data(lat, lon)
+    try:
+        lat = request.args.get('lat', type=float)
+        lon = request.args.get('lon', type=float)
+        city = request.args.get('city')
+        ip = request.args.get('ip')
+        
+        # 1. Resolver ubicación
+        if city:
+            result = geocode_city(city)
+            if result:
+                lat = result.get("lat")
+                lon = result.get("lon")
+        
+        if lat is None or lon is None:
+            try:
+                location = get_location_from_ip(ip)
+                lat = location.get("lat") or 24.142
+                lon = location.get("lon") or -110.310
+            except:
+                lat = 24.142
+                lon = -110.310
+        
+        # 2. Obtener todos los datos
+        try:
+            tides_data = get_tides(lat, lon)
+        except Exception as e:
+            tides_data = {"error": str(e), "tides": [], "station": "Error"}
+        
+        try:
+            weather_data = get_weather(lat, lon)
+        except Exception as e:
+            weather_data = {"error": str(e), "temperature": 25}
+        
+        try:
+            marine_data = get_marine_weather(lat, lon)
+        except Exception as e:
+            marine_data = {"error": str(e)}
+        
+        try:
+            solunar_data = get_solunar_data(lat, lon)
+        except Exception as e:
+            solunar_data = {"error": str(e), "moon_phase_name": "Unknown"}
     
     # 3. Calcular scores
     tide_coefficient = get_tide_coefficient(tides_data)
@@ -123,8 +143,13 @@ def tides():
             lon = result.get("lon")
     
     if lat is None or lon is None:
-        location = get_location_from_ip()
-        lat, lon = location.get("lat"), location.get("lon")
+        try:
+            location = get_location_from_ip()
+            lat = location.get("lat") or 24.142
+            lon = location.get("lon") or -110.310
+        except:
+            lat = 24.142
+            lon = -110.310
     
     return jsonify(get_tides(lat, lon, days))
 
@@ -145,8 +170,13 @@ def weather():
             lon = result.get("lon")
     
     if lat is None or lon is None:
-        location = get_location_from_ip()
-        lat, lon = location.get("lat"), location.get("lon")
+        try:
+            location = get_location_from_ip()
+            lat = location.get("lat") or 24.142
+            lon = location.get("lon") or -110.310
+        except:
+            lat = 24.142
+            lon = -110.310
     
     weather = get_weather(lat, lon)
     weather.update(get_marine_weather(lat, lon))
