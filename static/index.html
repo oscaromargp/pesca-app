@@ -299,11 +299,20 @@
     }
 
     async function loadForecast(lat, lon) {
+      if (!lat || !lon) {
+        alert('Coordenadas inválidas. Intenta de nuevo.');
+        return;
+      }
       document.getElementById('loading').classList.remove('hidden');
       document.getElementById('dashboard').classList.add('hidden');
       try {
         const resp = await fetch(`/api/forecast?lat=${lat}&lon=${lon}`);
+        if (!resp.ok) throw new Error('API error');
         const data = await resp.json();
+        
+        if (!data || !data.location) {
+          throw new Error('Datos no disponibles');
+        }
         
         currentLat = lat;
         currentLon = lon;
@@ -312,24 +321,24 @@
         document.getElementById('locationInfo').innerHTML = `
           <div class="info-row"><span class="info-label">Ciudad</span><span class="info-value">${data.location.city || 'N/A'}</span></div>
           <div class="info-row"><span class="info-label">País</span><span class="info-value">${data.location.country || 'N/A'}</span></div>
-          <div class="info-row"><span class="info-label">Lat</span><span class="info-value">${lat.toFixed(4)}</span></div>
-          <div class="info-row"><span class="info-label">Lon</span><span class="info-value">${lon.toFixed(4)}</span></div>
+          <div class="info-row"><span class="info-label">Lat</span><span class="info-value">${parseFloat(lat).toFixed(4)}</span></div>
+          <div class="info-row"><span class="info-label">Lon</span><span class="info-value">${parseFloat(lon).toFixed(4)}</span></div>
         `;
 
         // Score
-        const score = data.fishing_score;
+        const score = data.fishing_score ?? 5;
         document.getElementById('score').textContent = score;
         document.getElementById('score').style.background = `linear-gradient(135deg, ${getScoreColor(score)}, #fff)`;
         document.getElementById('score').style.webkitBackgroundClip = 'text';
         document.getElementById('scoreLabel').textContent = getScoreLabel(score);
 
         // Tides
-        const tidesHtml = data.tides.tides.slice(0, 4).map(t => `
+        const tidesHtml = (data.tides?.tides || []).slice(0, 4).map(t => `
           <div class="info-row">
             <span class="info-label">${t.type === 'high' ? '🌊 Pleamar' : '🔵 Bajamar'}</span>
-            <span class="info-value">${formatTime(t.time)} (${t.height}m)</span>
+            <span class="info-value">${formatTime(t.time)} (${t.height || 0}m)</span>
           </div>
-        `).join('');
+        `).join('') || '<div class="info-row"><span class="info-value">No disponible</span></div>';
         document.getElementById('tidesInfo').innerHTML = `
           <div class="info-row"><span class="info-label">Estación</span><span class="info-value">${data.tides.station || 'N/A'}</span></div>
           ${tidesHtml}
@@ -388,7 +397,13 @@
     window.onload = function() {
       fetch('/api/forecast')
         .then(r => r.json())
-        .then(d => loadForecast(d.location.lat, d.location.lon))
+        .then(d => {
+          if (d?.location?.lat && d?.location?.lon) {
+            loadForecast(d.location.lat, d.location.lon);
+          } else {
+            loadForecast(25.7617, -80.1918);
+          }
+        })
         .catch(() => loadForecast(25.7617, -80.1918));
     };
   </script>
