@@ -43,6 +43,7 @@ def cache_set(key, data):
 # ============================================================================
 
 CITIES_DB = {
+    # México - Pacífico
     "la paz": {"lat": 24.142, "lon": -110.310, "state": "Baja California Sur", "country": "México"},
     "mazatlan": {"lat": 23.225, "lon": -106.420, "state": "Sinaloa", "country": "México"},
     "cabo san lucas": {"lat": 22.891, "lon": -109.928, "state": "Baja California Sur", "country": "México"},
@@ -50,18 +51,29 @@ CITIES_DB = {
     "ensenada": {"lat": 31.866, "lon": -116.625, "state": "Baja California", "country": "México"},
     "san felipe": {"lat": 31.024, "lon": -114.832, "state": "Baja California", "country": "México"},
     "guaymas": {"lat": 27.919, "lon": -110.907, "state": "Sonora", "country": "México"},
+    "topolobampo": {"lat": 25.615, "lon": -109.055, "state": "Sinaloa", "country": "México"},
     "manzanillo": {"lat": 19.054, "lon": -104.318, "state": "Colima", "country": "México"},
+    "tijuana": {"lat": 32.515, "lon": -117.069, "state": "Baja California", "country": "México"},
+    # México - Golfo y Caribe
     "cancun": {"lat": 21.161, "lon": -86.851, "state": "Quintana Roo", "country": "México"},
     "cancún": {"lat": 21.161, "lon": -86.851, "state": "Quintana Roo", "country": "México"},
     "progreso": {"lat": 21.283, "lon": -89.667, "state": "Yucatán", "country": "México"},
     "tampico": {"lat": 22.255, "lon": -97.868, "state": "Tamaulipas", "country": "México"},
     "veracruz": {"lat": 19.189, "lon": -96.291, "state": "Veracruz", "country": "México"},
     "acapulco": {"lat": 16.863, "lon": -99.883, "state": "Guerrero", "country": "México"},
-    "tijuana": {"lat": 32.515, "lon": -117.069, "state": "Baja California", "country": "México"},
-    "miami": {"lat": 25.762, "lon": -80.192, "state": "Florida", "country": "USA"},
-    "key west": {"lat": 24.555, "lon": -81.808, "state": "Florida", "country": "USA"},
+    "cozumel": {"lat": 20.422, "lon": -86.923, "state": "Quintana Roo", "country": "México"},
+    "playa del carmen": {"lat": 20.627, "lon": -87.072, "state": "Quintana Roo", "country": "México"},
+    "mérida": {"lat": 20.967, "lon": -89.593, "state": "Yucatán", "country": "México"},
+    # USA - Pacífico
     "san diego": {"lat": 32.716, "lon": -117.161, "state": "California", "country": "USA"},
     "santa barbara": {"lat": 34.421, "lon": -119.702, "state": "California", "country": "USA"},
+    "los angeles": {"lat": 34.052, "lon": -118.244, "state": "California", "country": "USA"},
+    "san francisco": {"lat": 37.775, "lon": -122.418, "state": "California", "country": "USA"},
+    # USA - Atlántico
+    "miami": {"lat": 25.762, "lon": -80.192, "state": "Florida", "country": "USA"},
+    "key west": {"lat": 24.555, "lon": -81.808, "state": "Florida", "country": "USA"},
+    "tampa": {"lat": 27.951, "lon": -82.457, "state": "Florida", "country": "USA"},
+    "jacksonville": {"lat": 30.332, "lon": -81.656, "state": "Florida", "country": "USA"},
 }
 
 def geocode_city(query):
@@ -391,11 +403,8 @@ def get_solunar_data(lat, lon):
     - Iluminación (0-100%)
     - Períodos mayores y menores de actividad
     """
-    from skyfield.api import Star, Load
-    
-    try:
-        ts = Load.timescale()
-        t = ts.now()
+    # Usar cálculo simple para evitar dependencias problemáticas
+    return _simple_solunar()
         
         # Fase lunar (aproximación simple)
         # La luna llena ocurre ~cada 29.53 días
