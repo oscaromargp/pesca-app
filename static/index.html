@@ -403,7 +403,8 @@
         document.getElementById('content').classList.remove('hidden');
       } catch (err) {
         console.error('Error loading:', err);
-        document.getElementById('loading').innerHTML = '<p style="color:red">Error: ' + err.message + '</p><button onclick="loadData(24.142,-110.310)">Reintentar</button>';
+        document.getElementById('loading').innerHTML = '<div style="padding:20px;text-align:center;color:red"><h3>❌ Error cargando datos</h3><p>' + err.message + '</p><button onclick="loadData(24.142,-110.310)" style="padding:10px;margin:10px">Reintentar</button></div>';
+        document.getElementById('loading').classList.remove('hidden');
       }
     }
 
