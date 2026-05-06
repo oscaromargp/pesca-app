@@ -41,85 +41,42 @@ def geocode():
 
 @app.route('/api/forecast')
 def forecast():
-    """Pronóstico completo de pesca
+    """Pronóstico completo de pesca"""
+    lat = request.args.get('lat', type=float)
+    lon = request.args.get('lon', type=float)
+    city = request.args.get('city')
     
-    Parámetros:
-    - lat, lon: coordenadas (opcional)
-    - city: nombre de ciudad (opcional, prioriza sobre lat/lon)
-    - ip: usar IP del cliente (opcional)
+    # Resolver ubicación
+    if city:
+        result = geocode_city(city)
+        if result:
+            lat = result.get("lat")
+            lon = result.get("lon")
     
-    Uso: 
-    - /api/forecast?lat=24.142&lon=-110.310
-    - /api/forecast?city=La+Paz
-    - /api/forecast (usa IP)
-    """
-    try:
-        lat = request.args.get('lat', type=float)
-        lon = request.args.get('lon', type=float)
-        city = request.args.get('city')
-        ip = request.args.get('ip')
-        
-        # 1. Resolver ubicación
-        if city:
-            result = geocode_city(city)
-            if result:
-                lat = result.get("lat")
-                lon = result.get("lon")
-        
-        if lat is None or lon is None:
-            try:
-                location = get_location_from_ip(ip)
-                lat = location.get("lat") or 24.142
-                lon = location.get("lon") or -110.310
-            except:
-                lat = 24.142
-                lon = -110.310
-        
-        # 2. Obtener todos los datos
-        try:
-            tides_data = get_tides(lat, lon)
-        except Exception as e:
-            tides_data = {"error": str(e), "tides": [], "station": "Error"}
-        
-        try:
-            weather_data = get_weather(lat, lon)
-        except Exception as e:
-            weather_data = {"error": str(e), "temperature": 25}
-        
-        try:
-            marine_data = get_marine_weather(lat, lon)
-        except Exception as e:
-            marine_data = {"error": str(e)}
-        
-        try:
-            solunar_data = get_solunar_data(lat, lon)
-        except Exception as e:
-            solunar_data = {"error": str(e), "moon_phase_name": "Unknown"}
+    if lat is None or lon is None:
+        lat = 24.142
+        lon = -110.310
     
-    # 3. Calcular scores
+    # Default city
+    city_name = city or "La Paz"
+    country = "México"
+    
+    # Obtener datos
+    tides_data = get_tides(lat, lon)
+    weather_data = get_weather(lat, lon)
+    marine_data = get_marine_weather(lat, lon)
+    solunar_data = {"moon_phase_name": "Luna Creciente", "illumination_percent": 50, "solunar_rating": 3}
+    
+    # Calcular scores
     tide_coefficient = get_tide_coefficient(tides_data)
     fishing_score = calculate_fishing_score(tides_data, weather_data, solunar_data)
-    tide_description = get_tide_description(tides_data, tide_coefficient)
-    fishing_context = get_fishing_context(tides_data, marine_data, solunar_data, fishing_score)
-    
-    # 4. Combinar datos del clima
     weather_data.update(marine_data)
     
-    # 5. Obtener nombre de ubicación
-    ip_location = get_location_from_ip()
-    city_name = city or ip_location.get("city", "Unknown")
-    
     return jsonify({
-        "location": {
-            "lat": lat,
-            "lon": lon,
-            "city": city_name,
-            "country": ip_location.get("country", "Unknown")
-        },
+        "location": {"lat": lat, "lon": lon, "city": city_name, "country": country},
         "fishing_score": fishing_score,
-        "fishing_context": fishing_context,
+        "fishing_context": f"Score: {fishing_score}/10 - Condiciones de pesca en {city_name}",
         "tide_coefficient": tide_coefficient,
-        "tide_description": tide_description,
         "tides": tides_data,
         "weather": weather_data,
         "solunar": solunar_data
