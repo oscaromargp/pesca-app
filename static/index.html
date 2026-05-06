@@ -390,10 +390,14 @@
     async function loadData(lat, lon) {
       document.getElementById('loading').classList.remove('hidden');
       document.getElementById('content').classList.add('hidden');
+      console.log('loadData called:', lat, lon);
       
       try {
+        console.log('Fetching API...');
         const resp = await fetch(`/api/forecast?lat=${lat}&lon=${lon}`);
+        console.log('Response status:', resp.status);
         const data = await resp.json();
+        console.log('Data received:', JSON.stringify(data).substring(0, 200));
         currentData = data;
         currentLat = lat;
         currentLon = lon;
@@ -401,10 +405,10 @@
         renderData(data);
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('content').classList.remove('hidden');
+        console.log('Render complete');
       } catch (err) {
         console.error('Error loading:', err);
-        document.getElementById('loading').innerHTML = '<div style="padding:20px;text-align:center;color:red"><h3>❌ Error cargando datos</h3><p>' + err.message + '</p><button onclick="loadData(24.142,-110.310)" style="padding:10px;margin:10px">Reintentar</button></div>';
-        document.getElementById('loading').classList.remove('hidden');
+        document.getElementById('loading').innerHTML = '<div style="padding:20px;text-align:center;color:red"><h3>❌ Error cargando datos</h3><p>Error: ' + err.message + '</p><p>Check console for details</p><button onclick="loadData(24.142,-110.310)" style="padding:10px;margin:10px">Reintentar</button></div>';
       }
     }
 
