@@ -427,19 +427,19 @@
       }
 
       const solunar = data.solunar || {};
-      const moonIllum = (solunar.moon_illumination || 0) * 100;
+      const moonIllum = solunar.illumination_percent || 50;
       const mp = getMoonPhase(moonIllum);
       document.getElementById('moonVisual').textContent = mp.icon;
-      document.getElementById('moonName').textContent = mp.name;
+      document.getElementById('moonName').textContent = solunar.moon_phase_name || mp.name;
       document.getElementById('moonIllum').textContent = Math.round(moonIllum) + '% iluminada';
 
-      const marine = data.marine || {};
+      const marine = data.weather || {};
       document.getElementById('waterTemp').textContent = (marine.water_temperature || '--') + '°C';
 
       renderTideTable(tides, 'tideTableBody');
       renderWeekTable(tides);
       renderBestTimes(solunar);
-      renderWeather(data.weather || {}, marine);
+      renderWeather(data.weather || {});
       initMap();
     }
 
@@ -515,46 +515,47 @@
       `;
     }
 
-function renderWeather(weather, marine) {
+function renderWeather(w) {
+      const wt = w || {};
       document.getElementById('weatherGrid').innerHTML = `
         <div class="weather-item">
           <div class="weather-icon">🌡️</div>
-          <div class="weather-temp">${weather.temperature || '--'}°C</div>
+          <div class="weather-temp">${wt.temperature || '--'}°C</div>
           <div class="weather-label">Temperatura Aire</div>
         </div>
         <div class="weather-item">
           <div class="weather-icon">🌊</div>
-          <div class="weather-temp">${marine.water_temperature || '--'}°C</div>
+          <div class="weather-temp">${wt.water_temperature || '--'}°C</div>
           <div class="weather-label">Temperatura Mar</div>
         </div>
         <div class="weather-item">
           <div class="weather-icon">💨</div>
-          <div class="weather-temp">${weather.wind_speed || '--'}</div>
+          <div class="weather-temp">${wt.wind_speed || '--'}</div>
           <div class="weather-label">Viento km/h</div>
         </div>
         <div class="weather-item">
           <div class="weather-icon">📐</div>
-          <div class="weather-temp">${weather.wind_direction || 0}°</div>
+          <div class="weather-temp">${wt.wind_direction || 0}°</div>
           <div class="weather-label">Dirección</div>
         </div>
         <div class="weather-item">
           <div class="weather-icon">💧</div>
-          <div class="weather-temp">${weather.humidity || '--'}%</div>
+          <div class="weather-temp">${wt.humidity || '--'}%</div>
           <div class="weather-label">Humedad</div>
         </div>
         <div class="weather-item">
           <div class="weather-icon">🌊</div>
-          <div class="weather-temp">${marine.wave_height || '--'}m</div>
+          <div class="weather-temp">${wt.wave_height || '--'}m</div>
           <div class="weather-label">Olas</div>
         </div>
         <div class="weather-item">
           <div class="weather-icon">⏱️</div>
-          <div class="weather-temp">${marine.wave_period || '--'}s</div>
+          <div class="weather-temp">${wt.wave_period || '--'}s</div>
           <div class="weather-label">Periodo Olas</div>
         </div>
         <div class="weather-item">
           <div class="weather-icon">📊</div>
-          <div class="weather-temp">${weather.pressure || '--'}</div>
+          <div class="weather-temp">${wt.pressure || '--'}</div>
           <div class="weather-label">Presión hPa</div>
         </div>
       `;
