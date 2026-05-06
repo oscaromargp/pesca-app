@@ -243,6 +243,11 @@
             <div class="stat-label" id="scoreLabel">Score de Pesca</div>
           </div>
           <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-value" id="tideCoeff">--</div>
+            <div class="stat-label">Coeficiente Marea</div>
+          </div>
+          <div class="stat-card">
             <div class="stat-icon">🌊</div>
             <div class="stat-value" id="nextTide">--:--</div>
             <div class="stat-label" id="nextTideLabel">Próxima Marea</div>
@@ -252,11 +257,9 @@
             <div class="stat-value" id="waterTemp">--°C</div>
             <div class="stat-label">Temperatura Mar</div>
           </div>
-          <div class="stat-card">
-            <div class="stat-icon">🌙</div>
-            <div class="stat-value" id="moonPhase">--%</div>
-            <div class="stat-label">Iluminación Lunar</div>
-          </div>
+        </div>
+
+        <div id="fishingContext" style="background: var(--bg-card); border-left: 3px solid var(--primary); padding: 16px; border-radius: 0 8px 8px 0; margin-bottom: 24px; color: var(--text-muted);">
         </div>
 
         <h2 class="section-title">🌊 Tabla de Mareas Hoy</h2>
@@ -414,27 +417,29 @@
       document.getElementById('scoreValue').style.color = score >= 7 ? 'var(--success)' : score >= 5 ? 'var(--warning)' : 'var(--danger)';
       document.getElementById('scoreLabel').textContent = rating.label + ' ' + rating.icon;
 
+      document.getElementById('tideCoeff').textContent = data.tide_coefficient || '--';
+      document.getElementById('fishingContext').textContent = data.fishing_context || '';
+
       const tides = data.tides?.tides || [];
       if (tides.length > 0) {
         document.getElementById('nextTide').textContent = formatTime(tides[0].time);
-        document.getElementById('nextTideLabel').textContent = tides[0].type === 'high' ? 'Pleamar' : 'Bajamar';
+        document.getElementById('nextTideLabel').textContent = tides[0].type === 'high' ? 'Pleamar ▲' : 'Bajamar ▼';
       }
 
       const solunar = data.solunar || {};
       const moonIllum = (solunar.moon_illumination || 0) * 100;
-      document.getElementById('moonPhase').textContent = Math.round(moonIllum) + '%';
       const mp = getMoonPhase(moonIllum);
       document.getElementById('moonVisual').textContent = mp.icon;
       document.getElementById('moonName').textContent = mp.name;
       document.getElementById('moonIllum').textContent = Math.round(moonIllum) + '% iluminada';
 
-      const weather = data.weather || {};
-      document.getElementById('waterTemp').textContent = (data.marine?.temperature || '--') + '°C';
+      const marine = data.marine || {};
+      document.getElementById('waterTemp').textContent = (marine.water_temperature || '--') + '°C';
 
       renderTideTable(tides, 'tideTableBody');
       renderWeekTable(tides);
       renderBestTimes(solunar);
-      renderWeather(weather);
+      renderWeather(data.weather || {}, marine);
       initMap();
     }
 
@@ -510,12 +515,17 @@
       `;
     }
 
-    function renderWeather(weather) {
+function renderWeather(weather, marine) {
       document.getElementById('weatherGrid').innerHTML = `
         <div class="weather-item">
           <div class="weather-icon">🌡️</div>
           <div class="weather-temp">${weather.temperature || '--'}°C</div>
-          <div class="weather-label">Temperatura</div>
+          <div class="weather-label">Temperatura Aire</div>
+        </div>
+        <div class="weather-item">
+          <div class="weather-icon">🌊</div>
+          <div class="weather-temp">${marine.water_temperature || '--'}°C</div>
+          <div class="weather-label">Temperatura Mar</div>
         </div>
         <div class="weather-item">
           <div class="weather-icon">💨</div>
@@ -523,24 +533,29 @@
           <div class="weather-label">Viento km/h</div>
         </div>
         <div class="weather-item">
+          <div class="weather-icon">📐</div>
+          <div class="weather-temp">${weather.wind_direction || 0}°</div>
+          <div class="weather-label">Dirección</div>
+        </div>
+        <div class="weather-item">
           <div class="weather-icon">💧</div>
           <div class="weather-temp">${weather.humidity || '--'}%</div>
           <div class="weather-label">Humedad</div>
         </div>
         <div class="weather-item">
+          <div class="weather-icon">🌊</div>
+          <div class="weather-temp">${marine.wave_height || '--'}m</div>
+          <div class="weather-label">Olas</div>
+        </div>
+        <div class="weather-item">
+          <div class="weather-icon">⏱️</div>
+          <div class="weather-temp">${marine.wave_period || '--'}s</div>
+          <div class="weather-label">Periodo Olas</div>
+        </div>
+        <div class="weather-item">
           <div class="weather-icon">📊</div>
           <div class="weather-temp">${weather.pressure || '--'}</div>
           <div class="weather-label">Presión hPa</div>
-        </div>
-        <div class="weather-item">
-          <div class="weather-icon">🌬️</div>
-          <div class="weather-temp">${weather.wind_direction || 'N'}</div>
-          <div class="weather-label">Dirección</div>
-        </div>
-        <div class="weather-item">
-          <div class="weather-icon">🌊</div>
-          <div class="weather-temp">${currentData?.marine?.wave_height || '--'}m</div>
-          <div class="weather-label">Olas</div>
         </div>
       `;
     }
@@ -562,22 +577,22 @@
       if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
         loadData(coords[0], coords[1]);
       } else {
-        const cities = {
-          'la paz': [24.142, -110.310],
-          'mazatlán': [23.225, -106.420],
-          'cabo san lucas': [22.891, -109.928],
-          'ensenada': [31.866, -116.625],
-          'miami': [25.762, -80.192],
-          'tampico': [22.255, -97.868],
-        };
-        const key = input.toLowerCase();
-        for (let [name, coord] of Object.entries(cities)) {
-          if (key.includes(name)) {
-            loadData(coord[0], coord[1]);
-            return;
-          }
-        }
-        alert('Ciudad no encontrada. Usa coordenadas: lat,lon');
+        document.getElementById('loading').classList.remove('hidden');
+        document.getElementById('content').classList.add('hidden');
+        fetch(`/api/geocode?q=${encodeURIComponent(input)}`)
+          .then(r => r.json())
+          .then(data => {
+            if (data.lat && data.lon) {
+              loadData(data.lat, data.lon);
+            } else {
+              alert('Ubicación no encontrada: ' + (data.error || 'Intenta con otras coordenadas'));
+              document.getElementById('loading').classList.add('hidden');
+            }
+          })
+          .catch(() => {
+            alert('Error busqueda. Usa coordenadas: lat,lon');
+            document.getElementById('loading').classList.add('hidden');
+          });
       }
     }
 
