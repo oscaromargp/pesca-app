@@ -188,10 +188,13 @@ def solunar():
     
     Uso: /api/solunar?lat=24.142&lon=-110.310
     """
-    lat = request.args.get('lat', type=float)
-    lon = request.args.get('lon', type=float)
+    lat = request.args.get('lat', type=float) or 24.142
+    lon = request.args.get('lon', type=float) or -110.310
     
-    return jsonify(get_solunar_data(lat, lon))
+    try:
+        return jsonify(get_solunar_data(lat, lon))
+    except Exception as e:
+        return jsonify({"error": str(e), "moon_phase_name": "Error"})
 
 @app.route('/api/search')
 def search():
