@@ -133,11 +133,124 @@ function detectLocation() {
 
 // Load initial data
 window.onload = function() {
+    document.getElementById('loading').classList.remove('hidden');
+    document.getElementById('content').classList.add('hidden');
+    
     fetch('/api/forecast')
         .then(r => r.json())
-        .then(d => loadForecast(d.location.lat, d.location.lon))
+        .then(d => renderData(d))
         .catch(err => {
-            // Default to Miami
-            loadForecast(25.7617, -80.1918);
+            loadData(24.142, -110.310);
         });
 };
+
+function renderData(data) {
+    const loc = data.location || {};
+    document.getElementById('locationName').textContent = loc.city || 'La Paz';
+    document.getElementById('locationCountry').textContent = loc.country || 'Baja California Sur, México';
+
+    const score = data.fishing_score || 5;
+    document.getElementById('scoreValue').textContent = score;
+    document.getElementById('scoreValue').style.color = score >= 7 ? 'var(--success)' : score >= 5 ? 'var(--warning)' : 'var(--danger)';
+    document.getElementById('scoreLabel').textContent = score >= 7 ? 'Excelente 🐟' : score >= 5 ? 'Bueno 🐠' : 'Regular 🐡';
+
+    document.getElementById('tideCoeff').textContent = data.tide_coefficient || '--';
+    document.getElementById('fishingContext').textContent = data.fishing_context || '';
+
+    const tides = data.tides?.tides || [];
+    if (tides.length > 0) {
+        const formatTime = (t) => t?.split(' ')[1]?.substring(0, 5) || '--:--';
+        document.getElementById('nextTide').textContent = formatTime(tides[0].time);
+        document.getElementById('nextTideLabel').textContent = tides[0].type === 'high' ? 'Pleamar ▲' : 'Bajamar ▼';
+    }
+
+    const solunar = data.solunar || {};
+    const illum = solunar.illumination_percent || 50;
+    document.getElementById('moonVisual').textContent = illum > 60 ? '🌕' : illum > 30 ? '🌓' : '🌑';
+    document.getElementById('moonName').textContent = solunar.moon_phase_name || 'Luna Creciente';
+    document.getElementById('moonIllum').textContent = illum + '% iluminada';
+
+    const w = data.weather || {};
+    document.getElementById('waterTemp').textContent = (w.water_temperature || '--') + '°C';
+
+    renderTideTable(tides);
+    renderBestTimes(solunar);
+    renderWeather(w);
+    
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('content').classList.remove('hidden');
+}
+
+function renderTideTable(tides) {
+    if (!tides || tides.length === 0) {
+        document.getElementById('tideTableBody').innerHTML = '<div class="tide-row"><div>No hay datos</div></div>';
+        return;
+    }
+    const rows = [];
+    const formatTime = (t) => t?.split(' ')[1]?.substring(0, 5) || '--:--';
+    for (let i = 0; i < Math.min(4, tides.length); i++) {
+        const t = tides[i];
+        rows.push(`
+          <div class="tide-row">
+            <div class="tide-day">${i === 0 ? 'Hoy' : formatTime(t.time)}</div>
+            <div class="tide-time">
+              <span class="${t.type === 'high' ? 'tide-high' : 'tide-low'}">
+                ${t.type === 'high' ? '▲' : '▼'} ${formatTime(t.time)}
+              </span>
+              <div class="tide-value">${t.height || 0}m</div>
+            </div>
+            <div></div><div></div><div></div>
+            <div class="fishing-rating fish-avg">
+              <span class="fish-icon">🐠</span> Bueno
+            </div>
+          </div>
+        `);
+    }
+    document.getElementById('tideTableBody').innerHTML = rows.join('');
+}
+
+function renderBestTimes(solunar) {
+    document.getElementById('bestTimesGrid').innerHTML = `
+        <div class="best-time-card">
+          <div class="best-time-label">⭐ Mejor momento</div>
+          <div class="best-time-value">06:30-08:30</div>
+          <div class="best-time-desc">Amanecer</div>
+        </div>
+        <div class="best-time-card">
+          <div class="best-time-label">⭐ Segundo mejor</div>
+          <div class="best-time-value">18:45-20:45</div>
+          <div class="best-time-desc">Atardecer</div>
+        </div>
+    `;
+}
+
+function renderWeather(w) {
+    const wt = w || {};
+    document.getElementById('weatherGrid').innerHTML = `
+        <div class="weather-item">
+          <div class="weather-icon">🌡️</div>
+          <div class="weather-temp">${wt.temperature || '--'}°C</div>
+          <div class="weather-label">Temperatura Aire</div>
+        </div>
+        <div class="weather-item">
+          <div class="weather-icon">🌊</div>
+          <div class="weather-temp">${wt.water_temperature || '--'}°C</div>
+          <div class="weather-label">Temperatura Mar</div>
+        </div>
+        <div class="weather-item">
+          <div class="weather-icon">💨</div>
+          <div class="weather-temp">${wt.wind_speed || '--'}</div>
+          <div class="weather-label">Viento km/h</div>
+        </div>
+        <div class="weather-item">
+          <div class="weather-icon">💧</div>
+          <div class="weather-temp">${wt.humidity || '--'}%</div>
+          <div class="weather-label">Humedad</div>
+        </div>
+        <div class="weather-item">
+          <div class="weather-icon">📊</div>
+          <div class="weather-temp">${wt.pressure || '--'}</div>
+          <div class="weather-label">Presión hPa</div>
+        </div>
+    `;
+}
