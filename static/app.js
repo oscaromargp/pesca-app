@@ -58,20 +58,21 @@ async function loadForecast(lat, lon) {
         `;
         
         // Update score
-        const score = data.fishing_score;
+        const score = data.fishing_score || 0;
         document.getElementById('score').textContent = score;
         document.getElementById('score').style.color = getScoreColor(score);
         document.getElementById('scoreLabel').textContent = getScoreLabel(score);
         
         // Update tides
-        const tidesHtml = data.tides.tides.slice(0, 6).map(t => `
+        const tidesData = data.tides?.tides || [];
+        const tidesHtml = tidesData.slice(0, 6).map(t => `
             <div class="tide-item tide-${t.type}">
                 <span>${t.type === 'high' ? '🌊' : '🔵'} ${t.type === 'high' ? 'Pleamar' : 'Bajamar'}</span>
                 <span>${formatTime(t.time)} (${t.height}m)</span>
             </div>
         `).join('');
         document.getElementById('tidesInfo').innerHTML = `
-            <div class="info-row"><span class="label">Estación</span><span class="value">${data.tides.station || 'N/A'}</span></div>
+            <div class="info-row"><span class="label">Estación</span><span class="value">${data.tides?.station || 'N/A'}</span></div>
             ${tidesHtml}
         `;
         
@@ -85,12 +86,11 @@ async function loadForecast(lat, lon) {
         `;
         
         // Update solunar
-        const s = data.solunar;
+        const s = data.solunar || {};
         document.getElementById('solunarInfo').innerHTML = `
-            <div class="info-row"><span class="label">Fase lunar</span><span class="value">${(s.moon_phase * 100).toFixed(0)}%</span></div>
-            <div class="info-row"><span class="label">Rating</span><span class="value">${'⭐'.repeat(s.solunar_rating)}</span></div>
-            <div class="info-row"><span class="label">Major</span><span class="value">${s.major_periods.join(', ')}</span></div>
-            <div class="info-row"><span class="label">Minor</span><span class="value">${s.minor_periods.join(', ')}</span></div>
+            <div class="info-row"><span class="label">Fase</span><span class="value">${s.moon_phase_name || '--'}</span></div>
+            <div class="info-row"><span class="label">Iluminación</span><span class="value">${s.illumination_percent || 0}%</span></div>
+            <div class="info-row"><span class="label">Rating</span><span class="value">${'⭐'.repeat(s.solunar_rating || 0)}</span></div>
         `;
         
         // Update map
