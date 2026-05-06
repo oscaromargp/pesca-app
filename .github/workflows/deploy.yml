@@ -1,0 +1,26 @@
+name: Deploy to Render
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          
+      - name: Deploy to Render
+        uses: jmccanm/renderseq-action@v1
+        with:
+          api-key: ${{ secrets.RENDER_API_KEY }}
+          service-id: ${{ secrets.RENDER_SERVICE_ID }}

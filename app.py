@@ -9,6 +9,9 @@ import os
 app = Flask(__name__, static_folder='static', template_folder='static')
 CORS(app)
 
+# Get port from environment or default to 10000
+port = int(os.environ.get('PORT', 10000))
+
 @app.route('/')
 def index():
     return app.send_static_file('index.html')
@@ -69,5 +72,4 @@ def weather():
     return jsonify(get_weather(lat, lon))
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=False)
