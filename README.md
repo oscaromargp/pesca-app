@@ -124,6 +124,16 @@ O manualmente:
 
 ## 📡 APIs y Endpoints
 
+### Repositorios de Referencia
+
+| Repositorio |Descripción |Enfoque |
+|-------------|------------|--------|
+| [pytides](https://github.com/sam-cox/pytides) | Análisis armónico de mareas | Constituyentes armónicos (NOAA) |
+| [hatyan](https://github.com/Deltares/hatyan) | Análisis profesional mareas | Código holandés oficial |
+| [fishing-report](https://github.com/jsldvr/fishing-report) | App completa pesca | Clima + mareas + solunar + bite score |
+| [fishing-forecast](https://github.com/ATJ12/fishing-forecast) | Streamlit + Open-Meteo | Simple y efectivo |
+| [open-meteo](https://github.com/open-meteo/open-meteo) | Clima marino gratuito | Sin API key |
+
 ### Endpoints Disponibles
 
 | Endpoint | Descripción | Ejemplo |
