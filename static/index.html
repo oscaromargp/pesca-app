@@ -400,9 +400,8 @@
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('content').classList.remove('hidden');
       } catch (err) {
-        console.error(err);
-        alert('Error cargando datos. Usando ubicación predeterminada.');
-        loadData(24.142, -110.310);
+        console.error('Error loading:', err);
+        document.getElementById('loading').innerHTML = '<p style="color:red">Error: ' + err.message + '</p><button onclick="loadData(24.142,-110.310)">Reintentar</button>';
       }
     }
 
