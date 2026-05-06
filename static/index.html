@@ -1,64 +1,396 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pesca App - Clima, Mareas y Pronóstico</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🎣 Pesca App - Clima, Mareas y Pronóstico de Pesca</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <style>
+    :root {
+      --bg-primary: #000000;
+      --bg-secondary: #09090B;
+      --bg-tertiary: #18181B;
+      --accent-400: #22D3EE;
+      --accent-500: #06B6D4;
+      --accent-600: #0891B2;
+      --text-primary: #FFFFFF;
+      --text-secondary: #E4E4E7;
+      --text-tertiary: #A1A1AA;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+    h1, h2, h3 { font-family: 'Plus Jakarta Sans', sans-serif; }
+
+    /* NAVBAR */
+    .navbar {
+      position: fixed; top: 0; width: 100%; z-index: 1000;
+      padding: 20px 5%;
+      display: flex; justify-content: space-between; align-items: center;
+      transition: all 0.3s ease;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(34, 211, 238, 0.1);
+    }
+    .nav-logo { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 1.5rem; }
+    .nav-logo span { color: var(--accent-400); }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.95rem; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--accent-400); }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      text-align: center; padding: 120px 5% 60px;
+      background: radial-gradient(ellipse at top, rgba(34, 211, 238, 0.15) 0%, transparent 60%),
+                  radial-gradient(ellipse at bottom, rgba(6, 182, 212, 0.1) 0%, transparent 50%);
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+      background: repeating-linear-gradient(
+        transparent,
+        transparent 50px,
+        rgba(34, 211, 238, 0.03) 50px,
+        rgba(34, 211, 238, 0.03) 51px
+      );
+      animation: gridMove 20s linear infinite;
+    }
+    @keyframes gridMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(34, 211, 238, 0.1);
+      border: 1px solid rgba(34, 211, 238, 0.25);
+      padding: 8px 20px; border-radius: 100px;
+      font-size: 0.85rem; color: var(--accent-400);
+      margin-bottom: 24px; font-weight: 500;
+    }
+    .hero h1 {
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      font-weight: 800; line-height: 1.1; margin-bottom: 20px;
+      background: linear-gradient(135deg, #fff 0%, var(--accent-400) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-subtitle {
+      font-size: 1.2rem; color: var(--text-secondary); max-width: 600px; margin: 0 auto 40px;
+    }
+
+    /* SEARCH BOX */
+    .search-box {
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px; padding: 24px;
+      max-width: 500px; margin: 0 auto;
+    }
+    .search-input {
+      width: 100%;
+      background: var(--bg-tertiary);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 14px 18px;
+      color: #fff;
+      font-size: 1rem;
+      margin-bottom: 12px;
+    }
+    .search-input:focus { outline: none; border-color: var(--accent-500); }
+    .search-buttons { display: flex; gap: 10px; }
+    .btn {
+      flex: 1;
+      padding: 14px 24px; border-radius: 10px; font-weight: 600;
+      cursor: pointer; transition: all 0.3s; border: none;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-500), var(--accent-600));
+      color: #fff;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(6, 182, 212, 0.3); }
+    .btn-secondary {
+      background: rgba(255,255,255,0.1);
+      color: var(--text-primary);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.15); }
+
+    /* DASHBOARD */
+    .dashboard { padding: 40px 5%; max-width: 1400px; margin: 0 auto; }
+    .score-card {
+      background: linear-gradient(135deg, rgba(34, 211, 238, 0.1), rgba(6, 182, 212, 0.05));
+      border: 1px solid rgba(34, 211, 238, 0.2);
+      border-radius: 24px; padding: 40px; text-align: center; margin-bottom: 40px;
+    }
+    .score-value {
+      font-size: 6rem; font-weight: 800; line-height: 1;
+      background: linear-gradient(135deg, var(--accent-400), #fff);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .score-label { font-size: 1.3rem; color: var(--text-secondary); margin-top: 10px; }
+
+    /* GRID */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }
+    .card {
+      background: var(--bg-secondary);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 16px; padding: 24px;
+      transition: all 0.3s;
+    }
+    .card:hover { transform: translateY(-4px); border-color: rgba(34, 211, 238, 0.2); }
+    .card h3 { color: var(--accent-400); margin-bottom: 16px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+    .info-row {
+      display: flex; justify-content: space-between;
+      padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: var(--text-tertiary); }
+    .info-value { color: var(--text-primary); font-weight: 500; }
+
+    .card.full-width { grid-column: 1 / -1; }
+    #map {
+      width: 100%; height: 450px;
+      border-radius: 12px; margin-top: 10px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .loading { text-align: center; color: var(--text-secondary); font-size: 1.2rem; padding: 60px; }
+    .hidden { display: none; }
+
+    /* ANIMATIONS */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in { animation: fadeIn 0.6s ease forwards; }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 2rem; }
+      .grid { grid-template-columns: 1fr; }
+      .search-buttons { flex-direction: column; }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🎣 Pesca App</h1>
-            <p class="subtitle">Clima + Mareas + Pronóstico de Pesca</p>
-        </header>
 
-        <div class="location-bar">
-            <input type="text" id="coords" placeholder="Lat, Lon (ej: 25.7617, -80.1918)" />
-            <button onclick="searchLocation()">Buscar</button>
-            <button onclick="detectLocation()">📍 Mi ubicación</button>
-        </div>
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-logo">🎣 <span>Pesca</span>App</div>
+    <ul class="nav-links">
+      <li><a href="#features">Características</a></li>
+      <li><a href="#map">Mapa</a></li>
+      <li><a href="#contact">Contacto</a></li>
+    </ul>
+  </nav>
 
-        <div id="loading" class="loading hidden">Cargando datos...</div>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-badge">🌊 + 🌤️ + ⭐ Pronóstico en tiempo real</div>
+    <h1>¿Hoy es buen día<br/>para pescar?</h1>
+    <p class="hero-subtitle">
+      Descubre las condiciones perfectas para tu próxima aventura de pesca.
+      Clima, mareas, corrientes y puntuación de pesca en un solo lugar.
+    </p>
 
-        <div id="dashboard" class="dashboard hidden">
-            <div class="score-card" id="scoreCard">
-                <h2>Pronóstico de Pesca</h2>
-                <div class="score" id="score">-</div>
-                <div class="score-label" id="scoreLabel">Cargando...</div>
-            </div>
+    <div class="search-box">
+      <input type="text" id="coords" class="search-input" 
+             placeholder="Lat, Lon (ej: 25.7617, -80.1918)"/>
+      <div class="search-buttons">
+        <button class="btn btn-primary" onclick="searchLocation()">🔍 Buscar</button>
+        <button class="btn btn-secondary" onclick="detectLocation()">📍 Mi Ubicación</button>
+      </div>
+    </div>
+  </section>
 
-            <div class="grid">
-                <div class="card">
-                    <h3>🌊 Mareas</h3>
-                    <div id="tidesInfo">Cargando...</div>
-                </div>
+  <!-- DASHBOARD -->
+  <div id="loading" class="loading hidden">Cargando datos de pesca...</div>
 
-                <div class="card">
-                    <h3>🌤️ Clima</h3>
-                    <div id="weatherInfo">Cargando...</div>
-                </div>
-
-                <div class="card">
-                    <h3>🌙 Solunar</h3>
-                    <div id="solunarInfo">Cargando...</div>
-                </div>
-
-                <div class="card">
-                    <h3>📍 Ubicación</h3>
-                    <div id="locationInfo">Cargando...</div>
-                </div>
-            </div>
-
-            <div class="card full-width">
-                <h3>🗺️ Mapa de Mareas y Corrientes</h3>
-                <div id="map"></div>
-            </div>
-        </div>
+  <div id="dashboard" class="dashboard hidden">
+    <!-- SCORE CARD -->
+    <div class="score-card fade-in">
+      <h2>🎯 Pronóstico de Pesca</h2>
+      <div class="score-value" id="score">-</div>
+      <div class="score-label" id="scoreLabel">Cargando...</div>
     </div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="app.js"></script>
+    <!-- GRID -->
+    <div class="grid">
+      <!-- TIDES -->
+      <div class="card fade-in">
+        <h3>🌊 Mareas</h3>
+        <div id="tidesInfo">Cargando...</div>
+      </div>
+
+      <!-- WEATHER -->
+      <div class="card fade-in">
+        <h3>🌤️ Clima</h3>
+        <div id="weatherInfo">Cargando...</div>
+      </div>
+
+      <!-- SOLUNAR -->
+      <div class="card fade-in">
+        <h3>🌙 Solunar</h3>
+        <div id="solunarInfo">Cargando...</div>
+      </div>
+
+      <!-- LOCATION -->
+      <div class="card fade-in">
+        <h3>📍 Ubicación</h3>
+        <div id="locationInfo">Cargando...</div>
+      </div>
+
+      <!-- MAP -->
+      <div class="card full-width fade-in">
+        <h3>🗺️ Mapa de Mareas y Corrientes</h3>
+        <div id="map"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    let map;
+    let currentLat = null;
+    let currentLon = null;
+
+    function initMap(lat, lon) {
+      if (map) map.remove();
+      map = L.map('map').setView([lat, lon], 10);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+      }).addTo(map);
+      L.marker([lat, lon]).addTo(map).bindPopup('📍 Tu ubicación').openPopup();
+    }
+
+    function getScoreLabel(score) {
+      if (score >= 9) return '¡Excelente para pescar! 🐟';
+      if (score >= 7) return 'Muy bueno 👍';
+      if (score >= 5) return 'Bueno 😊';
+      if (score >= 3) return 'Regular 😐';
+      return 'No recomendado 😔';
+    }
+
+    function getScoreColor(score) {
+      if (score >= 9) return '#22C55E';
+      if (score >= 7) return '#22D3EE';
+      if (score >= 5) return '#F59E0B';
+      if (score >= 3) return '#F97316';
+      return '#EF4444';
+    }
+
+    function formatTime(timeStr) {
+      if (!timeStr) return '--:--';
+      return timeStr.split(' ')[1] || timeStr;
+    }
+
+    async function loadForecast(lat, lon) {
+      document.getElementById('loading').classList.remove('hidden');
+      document.getElementById('dashboard').classList.add('hidden');
+      try {
+        const resp = await fetch(`/api/forecast?lat=${lat}&lon=${lon}`);
+        const data = await resp.json();
+        
+        currentLat = lat;
+        currentLon = lon;
+
+        // Location
+        document.getElementById('locationInfo').innerHTML = `
+          <div class="info-row"><span class="info-label">Ciudad</span><span class="info-value">${data.location.city || 'N/A'}</span></div>
+          <div class="info-row"><span class="info-label">País</span><span class="info-value">${data.location.country || 'N/A'}</span></div>
+          <div class="info-row"><span class="info-label">Lat</span><span class="info-value">${lat.toFixed(4)}</span></div>
+          <div class="info-row"><span class="info-label">Lon</span><span class="info-value">${lon.toFixed(4)}</span></div>
+        `;
+
+        // Score
+        const score = data.fishing_score;
+        document.getElementById('score').textContent = score;
+        document.getElementById('score').style.background = `linear-gradient(135deg, ${getScoreColor(score)}, #fff)`;
+        document.getElementById('score').style.webkitBackgroundClip = 'text';
+        document.getElementById('scoreLabel').textContent = getScoreLabel(score);
+
+        // Tides
+        const tidesHtml = data.tides.tides.slice(0, 4).map(t => `
+          <div class="info-row">
+            <span class="info-label">${t.type === 'high' ? '🌊 Pleamar' : '🔵 Bajamar'}</span>
+            <span class="info-value">${formatTime(t.time)} (${t.height}m)</span>
+          </div>
+        `).join('');
+        document.getElementById('tidesInfo').innerHTML = `
+          <div class="info-row"><span class="info-label">Estación</span><span class="info-value">${data.tides.station || 'N/A'}</span></div>
+          ${tidesHtml}
+        `;
+
+        // Weather
+        const w = data.weather;
+        document.getElementById('weatherInfo').innerHTML = `
+          <div class="info-row"><span class="info-label">Temperatura</span><span class="info-value">${w.temperature}°C</span></div>
+          <div class="info-row"><span class="info-label">Viento</span><span class="info-value">${w.wind_speed} km/h</span></div>
+          <div class="info-row"><span class="info-label">Humedad</span><span class="info-value">${w.humidity}%</span></div>
+          <div class="info-row"><span class="info-label">Presión</span><span class="info-value">${w.pressure} hPa</span></div>
+        `;
+
+        // Solunar
+        const s = data.solunar;
+        document.getElementById('solunarInfo').innerHTML = `
+          <div class="info-row"><span class="info-label">Fase lunar</span><span class="info-value">${(s.moon_phase * 100).toFixed(0)}%</span></div>
+          <div class="info-row"><span class="info-label">Rating</span><span class="info-value">${'⭐'.repeat(s.solunar_rating)}</span></div>
+          <div class="info-row"><span class="info-label">Major</span><span class="info-value">${s.major_periods?.join(', ') || 'N/A'}</span></div>
+        `;
+
+        // Map
+        initMap(lat, lon);
+
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('dashboard').classList.remove('hidden');
+      } catch (err) {
+        alert('Error: ' + err.message);
+        document.getElementById('loading').classList.add('hidden');
+      }
+    }
+
+    function searchLocation() {
+      const input = document.getElementById('coords').value.trim();
+      const parts = input.split(',').map(s => parseFloat(s.trim()));
+      if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+        loadForecast(parts[0], parts[1]);
+      } else {
+        alert('Ingresa coordenadas válidas: lat, lon');
+      }
+    }
+
+    function detectLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          pos => loadForecast(pos.coords.latitude, pos.coords.longitude),
+          err => {
+            alert('No se pudo detectar ubicación. Usando IP...');
+            fetch('/api/forecast').then(r => r.json()).then(d => loadForecast(d.location.lat, d.location.lon));
+          }
+        );
+      }
+    }
+
+    window.onload = function() {
+      fetch('/api/forecast')
+        .then(r => r.json())
+        .then(d => loadForecast(d.location.lat, d.location.lon))
+        .catch(() => loadForecast(25.7617, -80.1918));
+    };
+  </script>
 </body>
 </html>
