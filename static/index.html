@@ -561,39 +561,85 @@ function renderWeather(weather, marine) {
     }
 
     function initMap() {
-      if (map) map.remove();
-      map = L.map('map').setView([currentLat, currentLon], 10);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap'
-      }).addTo(map);
-      L.marker([currentLat, currentLon]).addTo(map).bindPopup('📍 ' + (currentData?.location?.city || 'Ubicación')).openPopup();
+      try {
+        if (map) {
+          map.remove();
+          map = null;
+        }
+        if (typeof L === 'undefined') {
+          console.log('Leaflet no cargado');
+          return;
+        }
+        map = L.map('map', { zoomControl: true }).setView([currentLat, currentLon], 10);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap',
+          maxZoom: 18
+        }).addTo(map);
+        setTimeout(() => {
+          if (map) {
+            map.invalidateSize();
+            L.marker([currentLat, currentLon]).addTo(map).bindPopup('📍').openPopup();
+          }
+        }, 500);
+      } catch(e) {
+        console.error('Map error:', e);
+      }
     }
 
     function searchLocation() {
-      const input = document.getElementById('searchInput').value.trim();
+      const input = document.getElementById('searchInput').value.trim().toLowerCase();
       if (!input) return alert('Ingresa una ciudad o coordenadas');
       
       const coords = input.split(',').map(s => parseFloat(s.trim()));
       if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
         loadData(coords[0], coords[1]);
-      } else {
-        document.getElementById('loading').classList.remove('hidden');
-        document.getElementById('content').classList.add('hidden');
-        fetch(`/api/geocode?q=${encodeURIComponent(input)}`)
-          .then(r => r.json())
-          .then(data => {
-            if (data.lat && data.lon) {
-              loadData(data.lat, data.lon);
-            } else {
-              alert('Ubicación no encontrada: ' + (data.error || 'Intenta con otras coordenadas'));
-              document.getElementById('loading').classList.add('hidden');
-            }
-          })
-          .catch(() => {
-            alert('Error busqueda. Usa coordenadas: lat,lon');
-            document.getElementById('loading').classList.add('hidden');
-          });
+        return;
       }
+      
+      const citiesDB = {
+        'la paz': [24.142, -110.310, 'La Paz', 'Baja California Sur, México'],
+        'mazatlan': [23.225, -106.420, 'Mazatlán', 'Sinaloa, México'],
+        'cabo': [22.891, -109.928, 'Cabo San Lucas', 'Baja California Sur, México'],
+        'ensenada': [31.866, -116.625, 'Ensenada', 'Baja California, México'],
+        'san felipe': [31.024, -114.832, 'San Felipe', 'Baja California, México'],
+        'guaymas': [27.919, -110.907, 'Guaymas', 'Sonora, México'],
+        'manzanillo': [19.054, -104.318, 'Manzanillo', 'Colima, México'],
+        'progreso': [21.283, -89.667, 'Progreso', 'Yucatán, México'],
+        'tampico': [22.255, -97.868, 'Tampico', 'Tamaulipas, México'],
+        'veracruz': [19.189, -96.291, 'Veracruz', 'Veracruz, México'],
+        'miami': [25.762, -80.192, 'Miami', 'Florida, USA'],
+        'key west': [24.555, -81.808, 'Key West', 'Florida, USA'],
+        'san diego': [32.716, -117.161, 'San Diego', 'California, USA'],
+        'cancun': [21.161, -86.851, 'Cancún', 'Quintana Roo, México'],
+        'tijuana': [32.5149, -117.0692, 'Tijuana', 'Baja California, México'],
+        'acapulco': [16.8634, -99.8825, 'Acapulco', 'Guerrero, México'],
+      };
+      
+      for (const [name, data] of Object.entries(citiesDB)) {
+        if (input.includes(name)) {
+          loadData(data[0], data[1]);
+          return;
+        }
+      }
+      
+      document.getElementById('loading').classList.remove('hidden');
+      document.getElementById('content').classList.add('hidden');
+      fetch(`/api/geocode?q=${encodeURIComponent(input)}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.lat && data.lon) {
+            loadData(data.lat, data.lon);
+          } else {
+            alert('Ubicación no encontrada. Prueba: La Paz, Mazatlán, Miami, o coordenas (lat,lon)');
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('content').classList.remove('hidden');
+          }
+        })
+        .catch(() => {
+          alert('Ciudad no encontrada. Prueba: La Paz, Mazatlán, Miami, 25.76,-80.19');
+          document.getElementById('loading').classList.add('hidden');
+          document.getElementById('content').classList.remove('hidden');
+        });
     }
 
     function useGeolocation() {
