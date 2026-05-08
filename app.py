@@ -21,47 +21,13 @@ from src.tides import (
 
 @app.route('/')
 def index():
-    """Página principal con datos precargados (Server-Side Rendering)"""
-    # Obtener ubicación del query o usar默认值
-    lat = request.args.get('lat', type=float)
-    lon = request.args.get('lon', type=float)
-    city = request.args.get('city')
-    
-    if city:
-        result = geocode_city(city)
-        if result:
-            lat = result.get("lat")
-            lon = result.get("lon")
-    
-    if lat is None or lon is None:
-        lat = 24.142
-        lon = -110.310
-    
-    # Obtener datos para la ubicación
-    tides_data = get_tides(lat, lon)
-    weather_data = get_weather(lat, lon)
-    marine_data = get_marine_weather(lat, lon)
-    solunar_data = {"moon_phase_name": "Luna Creciente", "illumination_percent": 50, "solunar_rating": 3}
-    
-    tide_coefficient = get_tide_coefficient(tides_data)
-    fishing_score = calculate_fishing_score(tides_data, weather_data, solunar_data)
-    weather_data.update(marine_data)
-    
-    city_name = city or "La Paz"
-    country = "México"
-    
-    # Datos precargados para el template
-    forecast_data = {
-        "location": {"lat": lat, "lon": lon, "city": city_name, "country": country},
-        "fishing_score": fishing_score,
-        "fishing_context": f"Score: {fishing_score}/10 - Condiciones de pesca en {city_name}",
-        "tide_coefficient": tide_coefficient,
-        "tides": tides_data,
-        "weather": weather_data,
-        "solunar": solunar_data
-    }
-    
+    """Página principal"""
     return app.send_static_file('index.html')
+
+@app.route('/guia')
+def guia():
+    """Página de guía de pesca"""
+    return app.send_static_file('guide.html')
 
 @app.route('/api/geocode')
 def geocode():

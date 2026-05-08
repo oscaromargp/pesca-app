@@ -1,13 +1,91 @@
 """
 Fish Recommendations Engine
-Recomienda especies basadas en ubicación, condiciones y temporada
+Recomienda especies y lugares alternativos basados en ubicación, condiciones y temporada
 """
 import random
 from datetime import datetime, timedelta
+import math
 
-def get_current_month():
-    """Mes actual (1-12)"""
-    return datetime.now().month
+def calculate_distance(lat1, lon1, lat2, lon2):
+    """Calcula distancia en km entre dos puntos"""
+    R = 6371  # Radio de la Tierra en km
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = math.sin(dlat/2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon/2)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+    return R * c
+
+def get_distance_text(km):
+    """Formatea distancia"""
+    if km < 1:
+        return f"{int(km*1000)} m"
+    elif km < 100:
+        return f"{int(km)} km"
+    else:
+        return f"{int(km)} km"
+
+# base de datos de ubicaciones de pesca principales con scores típicos
+FISHING_LOCATIONS = {
+    "la paz": {"lat": 24.142, "lon": -110.310, "name": "La Paz", "state": "Baja California Sur", "typical_score": 75},
+    "cabo san lucas": {"lat": 22.891, "lon": -109.928, "name": "Cabo San Lucas", "state": "Baja California Sur", "typical_score": 85},
+    "cabo": {"lat": 22.891, "lon": -109.928, "name": "Cabo San Lucas", "state": "Baja California Sur", "typical_score": 85},
+    "mazatlan": {"lat": 23.225, "lon": -106.420, "name": "Mazatlán", "state": "Sinaloa", "typical_score": 70},
+    "ensenada": {"lat": 31.866, "lon": -116.625, "name": "Ensenada", "state": "Baja California", "typical_score": 65},
+    "san felipe": {"lat": 31.024, "lon": -114.832, "name": "San Felipe", "state": "Baja California", "typical_score": 60},
+    "guaymas": {"lat": 27.919, "lon": -110.907, "name": "Guaymas", "state": "Sonora", "typical_score": 65},
+    "topolobampo": {"lat": 25.615, "lon": -109.055, "name": "Topolobampo", "state": "Sinaloa", "typical_score": 70},
+    "manzanillo": {"lat": 19.054, "lon": -104.318, "name": "Manzanillo", "state": "Colima", "typical_score": 65},
+    "san diego": {"lat": 32.716, "lon": -117.161, "name": "San Diego", "state": "California", "country": "USA", "typical_score": 60},
+    "miami": {"lat": 25.762, "lon": -80.192, "name": "Miami", "state": "Florida", "country": "USA", "typical_score": 55},
+    "key west": {"lat": 24.555, "lon": -81.808, "name": "Key West", "state": "Florida", "country": "USA", "typical_score": 70},
+}
+
+def find_alternative_locations(lat, lon, weather, max_distance_km=100):
+    """Encuentra ubicaciones alternativas con mejores condiciones"""
+    alternatives = []
+    
+    # Evaluar cada ubicación conocida
+    for loc_id, loc_data in FISHING_LOCATIONS.items():
+        dist = calculate_distance(lat, lon, loc_data["lat"], loc_data["lon"])
+        
+        # Solo considerar dentro del radio
+        if dist <= max_distance_km and dist > 0:
+            # Calcular score basado en condiciones actuales
+            score = loc_data.get("typical_score", 50)
+            
+            # Ajustar por condición actual
+            temp = weather.get("temperature", 22)
+            wind = weather.get("wind_speed", 10)
+            
+            # Reducir si mucha calor o mucho viento
+            if temp > 30:
+                score -= 10
+            elif temp < 18:
+                score -= 5
+            
+            if wind > 30:
+                score -= 15
+            elif wind > 20:
+                score -= 10
+            
+            score = max(0, min(100, score))
+            
+            alternatives.append({
+                "id": loc_id,
+                "name": loc_data["name"],
+                "state": loc_data.get("state", ""),
+                "distance": dist,
+                "distance_text": get_distance_text(dist),
+                "lat": loc_data["lat"],
+                "lon": loc_data["lon"],
+                "score": score,
+                "reason": get_alternative_reason(loc_id, score, temp, wind)
+            })
+    
+    # Ordenar por score descendente
+    alternatives.sort(key=lambda x: x["score"], reverse=True)
+    
+    return alternatives[:4]  # Top 4 alternativas
 
 def get_season_score(month, lat):
     """Score de temporada para el mes actual"""
@@ -320,8 +398,17 @@ def generate_fishing_guide(lat, lon, weather, tides, location=None):
     
     fishing_score = min(100, base_score)
     
+    # Encontrar alternativas si el score es bajo
+    alternatives = []
+    alert_message = None
+    if fishing_score < 60:
+        alternatives = find_alternative_locations(lat, lon, weather, max_distance_km=150)
+        if alternatives:
+            alert_message = f"Las condiciones en {region_name} no son ideales. Te recomendamos otros sitios cercanos:"
+    
     return {
         "location": region_name,
+        "location_requested": location,
         "coordinates": {"lat": lat, "lon": lon},
         "fishing_score": fishing_score,
         "conditions": {
@@ -338,12 +425,14 @@ def generate_fishing_guide(lat, lon, weather, tides, location=None):
         },
         "tides": {
             "next_high": tides.get("next_tide", {}).get("time"),
-            "next_low": None,  # Could add more tide data
+            "next_low": None,
             "coefficient": tides.get("tide_coefficient")
         },
         "recommendations": fish_recs,
         "best_times": best_times,
         "best_baits": best_baits,
+        "alternative_locations": alternatives,
+        "alert_message": alert_message,
         "tips": [
             f"🔹 Sector: {region_name}",
             f"🔹 Mejor temperatura agua: 20-26°C",

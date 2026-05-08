@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🎣 Guía de Pesca - Tu destino de pesca perfecto</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --primary: #06B6D4;
+      --primary-dark: #0891B2;
+      --secondary: #10B981;
+      --warning: #F59E0B;
+      --danger: #EF4444;
+      --bg: #0C1222;
+      --bg-card: #1A2235;
+      --bg-card-hover: #242D42;
+      --text: #F8FAFC;
+      --text-muted: #94A3B8;
+      --border: #334155;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* Background pattern */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: 
+        radial-gradient(ellipse at 20% 0%, rgba(6,182,212,0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 100%, rgba(16,185,129,0.1) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+
+    /* Header / Search */
+    header {
+      padding: 30px 0 20px;
+      text-align: center;
+    }
+    .logo {
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .tagline { color: var(--text-muted); margin-top: 4px; }
+
+    .search-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      margin: 24px auto;
+      max-width: 480px;
+      display: flex;
+      gap: 10px;
+    }
+    .search-input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      color: var(--text);
+      font-size: 1rem;
+      font-family: inherit;
+    }
+    .search-input:focus { outline: none; border-color: var(--primary); }
+    .search-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 14px 24px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 80px 20px;
+    }
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid var(--bg-card);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Alert */
+    .alert {
+      background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(239,68,68,0.1));
+      border: 1px solid var(--warning);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .alert-icon { font-size: 1.5rem; }
+    .alert-text { flex: 1; }
+    .alert-title { font-weight: 600; color: var(--warning); }
+    .alert-desc { color: var(--text-muted); font-size: 0.9rem; }
+
+    /* Hero Score */
+    .hero {
+      background: var(--bg-card);
+      border-radius: 20px;
+      padding: 30px;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .location-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+    .location-name { font-weight: 700; color: var(--text); }
+
+    .score-circle {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      position: relative;
+      background: conic-gradient(var(--primary) var(--p, #1A2235) var(--p, transparent var(--p));
+    }
+    .score-circle::before {
+      content: '';
+      position: absolute;
+      inset: 8px;
+      background: var(--bg-card);
+      border-radius: 50%;
+    }
+    .score-value {
+      position: relative;
+      font-size: 3rem;
+      font-weight: 800;
+    }
+    .score-label {
+      position: relative;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .conditions-badges {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+    .condition-badge {
+      background: var(--bg);
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .condition-badge.good { color: var(--secondary); }
+    .condition-badge.warning { color: var(--warning); }
+
+    /* Section titles */
+    .section-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin: 32px 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Best Times Timeline */
+    .times-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .time-item {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .time-rating {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+    .time-rating.high { background: rgba(16,185,129,0.2); color: var(--secondary); }
+    .time-rating.medium { background: rgba(245,158,11,0.2); color: var(--warning); }
+    .time-rating.low { background: rgba(239,68,68,0.2); color: var(--danger); }
+    .time-info { flex: 1; }
+    .time-range { font-weight: 600; }
+    .time-desc { color: var(--text-muted); font-size: 0.85rem; }
+
+    /* Fish Cards */
+    .fish-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+    }
+    .fish-card {
+      background: var(--bg-card);
+      border-radius: 14px;
+      padding: 18px;
+      border: 1px solid var(--border);
+      transition: all 0.2s;
+    }
+    .fish-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+    .fish-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .fish-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    }
+    .fish-title { flex: 1; }
+    .fish-name { font-weight: 700; font-size: 1.1rem; }
+    .fish-sci { color: var(--text-muted); font-size: 0.8rem; font-style: italic; }
+    .fish-score-badge {
+      background: var(--bg);
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-weight: 700;
+    }
+    .fish-desc {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 14px;
+    }
+    .fish-meta {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .fish-tag {
+      background: var(--bg);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+    }
+    .fish-tips {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+    .fish-tip {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      padding: 4px 0;
+    }
+
+    /* Alternative Locations */
+    .alt-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    .alt-card {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 16px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      transition: all 0.2s;
+    }
+    .alt-card:hover {
+      border-color: var(--secondary);
+      background: var(--bg-card-hover);
+    }
+    .alt-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .alt-name { font-weight: 600; }
+    .alt-score {
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+    .alt-score.good { background: rgba(16,185,129,0.2); color: var(--secondary); }
+    .alt-score.medium { background: rgba(245,158,11,0.2); color: var(--warning); }
+    .alt-distance { color: var(--text-muted); font-size: 0.85rem; }
+    .alt-reason { color: var(--text-muted); font-size: 0.85rem; margin-top: 6px; }
+
+    /* Baits */
+    .baits-section {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .baits-grid {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .bait-item {
+      background: var(--bg);
+      padding: 10px 16px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Tips */
+    .tips-list {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .tip-item {
+      padding: 8px 0;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">🎣 Pesca<span style="color:var(--primary)">Guide</span></div>
+      <p class="tagline">Tu guía de pesca perfecta</p>
+      
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Ciudad (ej: La Paz, Mazatlán, Cabo)"/>
+        <button class="search-btn" onclick="searchCity()">🔍 Buscar</button>
+      </div>
+    </header>
+
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      <p>Cargando condiciones de pesca...</p>
+    </div>
+
+    <div id="error" style="display:none;text-align:center;padding:40px;">
+      <p style="color:var(--danger);font-size:1.2rem;">❌ <span id="errorMsg">Error cargando datos</span></p>
+      <button onclick="loadGuide('La Paz')" style="margin-top:16px;padding:12px 24px;cursor:pointer;">Ver La Paz</button>
+    </div>
+
+    <div id="app" style="display:none;">
+      <!-- Alert for alternatives -->
+      <div id="alert" class="alert" style="display:none;">
+        <span class="alert-icon">⚠️</span>
+        <div class="alert-text">
+          <div class="alert-title" id="alertTitle"></div>
+          <div class="alert-desc" id="alertDesc"></div>
+        </div>
+      </div>
+
+      <!-- Hero / Score -->
+      <div class="hero">
+        <div class="location-badge">
+          📍 <span class="location-name" id="locName">La Paz</span>, <span id="locState">Baja California Sur</span>
+        </div>
+        
+        <div class="score-circle" id="scoreCircle">
+          <div class="score-value" id="scoreValue">-</div>
+          <div class="score-label">/ 100</div>
+        </div>
+        
+        <div class="conditions-badges" id="conditionsBadges"></div>
+      </div>
+
+      <!-- Best Times -->
+      <h2 class="section-title">🕐 Mejores Horarios</h2>
+      <div class="times-list" id="timesList"></div>
+
+      <!-- Fish Species -->
+      <h2 class="section-title">🐟 Especie a Pescar</h2>
+      <div class="fish-grid" id="fishList"></div>
+
+      <!-- Baits -->
+      <h2 class="section-title">🎣 Carnadas y Señuelos</h2>
+      <div class="baits-section">
+        <div class="baits-grid" id="baitsList"></div>
+      </div>
+
+      <!-- Alternative Locations -->
+      <div id="altSection" style="display:none;">
+        <h2 class="section-title">📍 Otros Sitios Cercanos</h2>
+        <p style="color:var(--text-muted);margin-bottom:12px;font-size:0.9rem;" id="altSubtitle"></p>
+        <div class="alt-list" id="altList"></div>
+      </div>
+
+      <!-- Tips -->
+      <h2 class="section-title">💡 Consejos</h2>
+      <div class="tips-list" id="tipsList"></div>
+    </div>
+
+    <footer>
+      <p>🎣 PescaGuide - Datos de NOAA y Open-Meteo</p>
+      <p style="margin-top:8px;">Pronóstico basado en condiciones reales</p>
+    </footer>
+  </div>
+
+  <script>
+    // Fish icons mapping
+    const FISH_ICONS = {
+      'dorado': '🐠',
+      'huachinango': '🐟',
+      'pargo': '🐟',
+      'cabrilla': '🐡',
+      'tuna': '🐟',
+      'marlin': '🦈',
+      'lubina': '🐡',
+      'robalo': '🐡',
+      'bonito': '🐟',
+      'trucha': '🐟',
+      'bagre': '🐱',
+      'mojarra': '🐟',
+      'wahoo': '🐟',
+      'sailfish': '🦈',
+      'mackerel': '🐟'
+    };
+
+    const DEFAULT_ICON = '🐟';
+
+    function getFishIcon(fishId) {
+      return FISH_ICONS[fishId] || DEFAULT_ICON;
+    }
+
+    function getScoreColor(score) {
+      if (score >= 75) return 'var(--secondary)';
+      if (score >= 50) return 'var(--warning)';
+      return 'var(--danger)';
+    }
+
+    function getRatingClass(rating) {
+      if (rating >= 8) return 'high';
+      if (rating >= 5) return 'medium';
+      return 'low';
+    }
+
+    async function loadGuide(city) {
+      city = city || document.getElementById('searchInput').value.trim() || 'La Paz';
+      
+      document.getElementById('loading').style.display = 'block';
+      document.getElementById('error').style.display = 'none';
+      document.getElementById('app').style.display = 'none';
+      
+      try {
+        const resp = await fetch('/api/fish-guide?city=' + encodeURIComponent(city));
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        
+        const data = await resp.json();
+        render(data);
+      } catch (err) {
+        console.error(err);
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('error').style.display = 'block';
+        document.getElementById('errorMsg').textContent = err.message;
+      }
+    }
+
+    function render(data) {
+      const fish = data.alternative_locations || [];
+      const alt = data.alert_message;
+      
+      // Location
+      document.getElementById('locName').textContent = data.location.split('/')[0].trim();
+      document.getElementById('locState').textContent = data.location_requested || 'Baja California Sur';
+      
+      // Score
+      const score = data.fishing_score || 0;
+      const scoreEl = document.getElementById('scoreValue');
+      scoreEl.textContent = score;
+      scoreEl.style.color = getScoreColor(score);
+      
+      const circle = document.getElementById('scoreCircle');
+      const p = (score / 100) * 360;
+      circle.style.setProperty('--p', p + 'deg');
+      circle.style.background = `conic-gradient(${getScoreColor(score)} ${p}deg, #1A2235 ${p}deg)`;
+      
+      // Conditions badges
+      const c = data.conditions || {};
+      const badges = [
+        { icon: '🌡️', value: c.temperature + '°Aire', good: c.temperature >= 18 && c.temperature <= 28 },
+        { icon: '💨', value: c.wind + ' km/h', good: c.wind >= 5 && c.wind <= 20 },
+        { icon: '🌊', value: c.condition || 'Despejado', good: c.condition && !c.condition.includes('Lluvia') }
+      ];
+      
+      let badgesHtml = '';
+      badges.forEach(b => {
+        badgesHtml += '<span class="condition-badge ' + (b.good ? 'good' : 'warning') + '">' + b.icon + ' ' + b.value + '</span>';
+      });
+      document.getElementById('conditionsBadges').innerHTML = badgesHtml;
+      
+      // Alert for alternatives
+      if (alt && fish.length > 0) {
+        document.getElementById('alert').style.display = 'flex';
+        document.getElementById('alertTitle').textContent = data.alert_message;
+        document.getElementById('alertDesc').textContent = fish[0].name + ' a ' + fish[0].distance_text + ' tiene melhores condiciones';
+      } else {
+        document.getElementById('alert').style.display = 'none';
+      }
+      
+      // Best times
+      const times = data.best_times || [];
+      let timesHtml = '';
+      times.forEach(t => {
+        timesHtml += '<div class="time-item">' +
+          '<div class="time-rating ' + getRatingClass(t.rating) + '">' + t.rating + '</div>' +
+          '<div class="time-info">' +
+            '<div class="time-range">' + t.time + '</div>' +
+            '<div class="time-desc">' + t.reason + '</div>' +
+          '</div>' +
+        '</div>';
+      });
+      document.getElementById('timesList').innerHTML = timesHtml;
+      
+      // Fish recommendations
+      const recs = data.recommendations || [];
+      let fishHtml = '';
+      recs.slice(0, 6).forEach(f => {
+        fishHtml += '<div class="fish-card">' +
+          '<div class="fish-header">' +
+            '<div class="fish-icon">' + getFishIcon(f.fish_id) + '</div>' +
+            '<div class="fish-title">' +
+              '<div class="fish-name">' + f.name + '</div>' +
+              '<div class="fish-sci">' + f.scientific + '</div>' +
+            '</div>' +
+            '<div class="fish-score-badge" style="color:' + getScoreColor(f.score) + '">' + f.score + '%</div>' +
+          '</div>' +
+          '<div class="fish-desc">' + f.description.substring(0, 100) + '...</div>' +
+          '<div class="fish-meta">' +
+            '<span class="fish-tag">⚡ ' + (f.difficulty || 'intermedio') + '</span>' +
+            '<span class="fish-tag">📏 ' + (f.size_range || 'variable').substring(0, 15) + '</span>' +
+          '</div>' +
+          '<div class="fish-tips">' +
+            (f.tips || []).slice(0, 2).map(t => '<div class="fish-tip">' + t + '</div>').join('') +
+          '</div>' +
+        '</div>';
+      });
+      document.getElementById('fishList').innerHTML = fishHtml;
+      
+      // Baits
+      const baits = data.best_baits || [];
+      let baitsHtml = '';
+      baits.forEach(b => {
+        baitsHtml += '<span class="bait-item">🪱 ' + b + '</span>';
+      });
+      document.getElementById('baitsList').innerHTML = baitsHtml;
+      
+      // Alternative locations
+      if (alt && fish.length > 0) {
+        document.getElementById('altSection').style.display = 'block';
+        document.getElementById('altSubtitle').textContent = 'Otros lugares con melhores condiciones:';
+        
+        let altHtml = '';
+        fish.slice(0, 3).forEach(a => {
+          altHtml += '<div class="alt-card" onclick="loadGuide(\'' + a.name + '\')">' +
+            '<div class="alt-header">' +
+              '<span class="alt-name">' + a.name + '</span>' +
+              '<span class="alt-score ' + getRatingClass(a.score) + '">' + a.score + '%</span>' +
+            '</div>' +
+            '<div class="alt-distance">📍 ' + a.distance_text + '</div>' +
+            '<div class="alt-reason">' + a.reason + '</div>' +
+          '</div>';
+        });
+        document.getElementById('altList').innerHTML = altHtml;
+      } else {
+        document.getElementById('altSection').style.display = 'none';
+      }
+      
+      // Tips
+      const tips = data.tips || [];
+      document.getElementById('tipsList').innerHTML = tips.map(t => '<div class="tip-item">' + t + '</div>').join('');
+      
+      // Show
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+    }
+
+    async function searchCity() {
+      const q = document.getElementById('searchInput').value.trim();
+      if (q) loadGuide(q);
+    }
+
+    document.getElementById('searchInput').addEventListener('keypress', e => {
+      if (e.key === 'Enter') searchCity();
+    });
+
+    // Load on init
+    window.onload = () => loadGuide('La Paz');
+  </script>
+</body>
+</html>
