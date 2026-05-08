@@ -217,5 +217,42 @@ def health():
     """Health check para monitoring"""
     return jsonify({"status": "ok", "app": "pesca-app"})
 
+@app.route('/api/fish-guide')
+def fish_guide():
+    """Guía completa de pesca para la ubicación
+    
+    Uso: /api/fish-guide?lat=24.142&lon=-110.310&city=La+Paz
+    Devuelve: Especies recomendadas, técnicas, señuelos, carnadas, horarios óptimos
+    """
+    lat = request.args.get('lat', type=float)
+    lon = request.args.get('lon', type=float)
+    city = request.args.get('city')
+    
+    # Resolver ubicación
+    if city:
+        result = geocode_city(city)
+        if result:
+            lat = result.get("lat")
+            lon = result.get("lon")
+    
+    if lat is None or lon is None:
+        lat = 24.142
+        lon = -110.310
+    
+    city_name = city or "La Paz"
+    
+    # Obtener datos
+    tides_data = get_tides(lat, lon)
+    weather_data = get_weather(lat, lon)
+    weather_data.update(get_marine_weather(lat, lon))
+    
+    # Generar guía
+    try:
+        from src.recommendations import generate_fishing_guide
+        guide = generate_fishing_guide(lat, lon, weather_data, tides_data, city_name)
+        return jsonify(guide)
+    except Exception as e:
+        return jsonify({"error": str(e), "location": city_name})
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=port, debug=False)
