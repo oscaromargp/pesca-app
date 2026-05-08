@@ -3,281 +3,646 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Pesca App - Pronóstico de Pesca</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <title>🎣 Pesca Guide - Tu guía de pesca</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <style>
-    :root { --primary: #0284C7; --bg: #0F172A; --card: #1E293B; --text: #F8FAFC; --muted: #94A3B8; --success: #22C55E; }
+    :root {
+      --primary: #06B6D4;
+      --primary-dark: #0891B2;
+      --secondary: #10B981;
+      --bg: #0C1222;
+      --bg-card: #1A2235;
+      --bg-card-hover: #242D42;
+      --text: #F8FAFC;
+      --text-muted: #94A3B8;
+      --border: #334155;
+      --success: #22C55E;
+      --warning: #F59E0B;
+      --danger: #EF4444;
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; line-height: 1.6; }
-    .container { max-width: 900px; margin: 0 auto; padding: 20px; }
-    header { background: linear-gradient(180deg, rgba(2,132,199,0.15) 0%, transparent 100%); padding: 40px 0 30px; text-align: center; }
-    .logo { font-size: 2rem; font-weight: 700; }
-    .logo span { color: var(--primary); }
-    .search { background: var(--card); border-radius: 12px; padding: 16px; margin: 20px auto; max-width: 500px; display: flex; gap: 10px; }
-    .search input { flex: 1; background: var(--bg); border: 1px solid #334155; border-radius: 8px; padding: 12px; color: var(--text); font-size: 1rem; }
-    .search button { background: var(--primary); color: white; border: none; border-radius: 8px; padding: 12px 20px; cursor: pointer; font-weight: 600; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at 20% 0%, rgba(6,182,212,0.12) 0%, transparent 50%),
+                  radial-gradient(ellipse at 80% 100%, rgba(16,185,129,0.08) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: -1;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 16px; }
+
+    /* Header */
+    header { padding: 20px 0 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .logo { font-size: 1.8rem; font-weight: 800; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
     
-    #app { }
-    .location-header { text-align: center; margin-bottom: 30px; }
-    .location-name { font-size: 1.8rem; font-weight: 700; }
-    .location-sub { color: var(--muted); }
-    
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 30px; }
-    .stat-card { background: var(--card); border-radius: 12px; padding: 20px; text-align: center; }
-    .stat-value { font-size: 1.8rem; font-weight: 700; }
-    .stat-label { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
-    .stat-value.good { color: var(--success); }
-    .stat-value.medium { color: #F59E0B; }
-    
-    .tide-table { background: var(--card); border-radius: 12px; overflow: hidden; }
-    .tide-header { display: grid; grid-template-columns: 100px repeat(3, 1fr); background: var(--bg); padding: 14px 16px; font-weight: 600; border-bottom: 1px solid #334155; }
-    .tide-row { display: grid; grid-template-columns: 100px repeat(3, 1fr); padding: 14px 16px; border-bottom: 1px solid #334155; align-items: center; }
-    .tide-row:last-child { border-bottom: none; }
-    .tide-day { font-weight: 600; }
-    .tide-high { color: var(--primary); }
-    .tide-arrow { margin-right: 6px; }
-    
-    .section-title { font-size: 1.2rem; font-weight: 600; margin: 30px 0 16px; }
-    
-    .moon-card { background: var(--card); border-radius: 12px; padding: 24px; text-align: center; }
-    .moon-icon { font-size: 3rem; margin-bottom: 8px; }
-    .moon-name { font-size: 1.2rem; font-weight: 600; }
-    .moon-illum { color: var(--muted); margin-top: 4px; }
-    
-    .weather-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; }
-    .weather-item { background: var(--card); border-radius: 10px; padding: 16px; text-align: center; }
-    .weather-temp { font-size: 1.3rem; font-weight: 600; }
-    .weather-label { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
-    
-    .loading { text-align: center; padding: 60px; color: var(--muted); }
-    .loading-spinner { width: 40px; height: 40px; border: 3px solid var(--card); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px; }
+    /* Search Bar */
+    .search-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 14px;
+      display: flex;
+      gap: 8px;
+      flex: 1;
+      max-width: 400px;
+      min-width: 250px;
+    }
+    .search-input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: 0.95rem;
+      font-family: inherit;
+    }
+    .search-input:focus { outline: none; border-color: var(--primary); }
+    .search-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 1.1rem;
+    }
+
+    /* Location Selector */
+    .location-bar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .location-select {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: 0.95rem;
+      font-family: inherit;
+      min-width: 180px;
+      cursor: pointer;
+    }
+    .location-select:focus { outline: none; border-color: var(--primary); }
+    .gps-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    .gps-btn:hover { background: var(--bg-card-hover); }
+
+    /* Map */
+    #map {
+      height: 280px;
+      border-radius: 14px;
+      margin: 16px 0;
+      border: 1px solid var(--border);
+    }
+    .leaflet-popup-content-wrapper { background: var(--bg-card); color: var(--text); }
+    .leaflet-popup-tip { background: var(--bg-card); }
+
+    /* Hero Card */
+    .hero-card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .location-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+    .location-name { font-size: 1.6rem; font-weight: 700; }
+    .location-state { color: var(--text-muted); font-size: 0.9rem; }
+
+    /* Score Circle */
+    .score-section { display: flex; align-items: center; gap: 20px; }
+    .score-circle {
+      width: 90px; height: 90px;
+      border-radius: 50%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: conic-gradient(var(--primary) 0deg, var(--bg-card) 0deg);
+      position: relative;
+    }
+    .score-circle::before {
+      content: ''; position: absolute; inset: 6px;
+      background: var(--bg-card); border-radius: 50%;
+    }
+    .score-value { position: relative; font-size: 1.6rem; font-weight: 700; z-index: 1; }
+    .score-max { position: relative; font-size: 0.7rem; color: var(--text-muted); z-index: 1; }
+    .score-details { flex: 1; }
+    .score-label { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
+    .score-context { color: var(--text-muted); font-size: 0.85rem; }
+
+    /* Conditions */
+    .conditions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    .condition {
+      background: var(--bg);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .condition.good { color: var(--success); }
+    .condition.warning { color: var(--warning); }
+
+    /* Tides */
+    .tides-section { margin-top: 16px; }
+    .tides-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 10px; }
+    .tides-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+    .tide-card {
+      background: var(--bg);
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+    }
+    .tide-time { font-weight: 600; font-size: 1rem; }
+    .tide-type { font-size: 0.8rem; color: var(--text-muted); }
+    .tide-type.high { color: var(--primary); }
+    .tide-type.low { color: var(--text-muted); }
+    .tide-height { font-size: 0.85rem; margin-top: 4px; }
+
+    /* Fish Recommendations */
+    .fish-section { margin-top: 20px; }
+    .fish-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 10px; }
+    .fish-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+    .fish-card {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .fish-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+    .fish-name { font-weight: 600; font-size: 0.95rem; }
+    .fish-info { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+    .fish-score { 
+      background: var(--bg); 
+      padding: 4px 8px; 
+      border-radius: 6px; 
+      font-size: 0.75rem; 
+      font-weight: 600; 
+      display: inline-block; 
+      margin-top: 6px; 
+    }
+
+    /* Best Times */
+    .times-section { margin-top: 20px; }
+    .times-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 10px; }
+    .times-grid { display: flex; gap: 10px; flex-wrap: wrap; }
+    .time-card {
+      background: var(--bg-card);
+      border-radius: 10px;
+      padding: 12px 16px;
+      text-align: center;
+      min-width: 100px;
+    }
+    .time-range { font-weight: 600; font-size: 0.95rem; }
+    .time-rating { font-size: 0.8rem; margin-top: 4px; }
+    .time-rating.high { color: var(--success); }
+    .time-rating.medium { color: var(--warning); }
+    .time-rating.low { color: var(--danger); }
+
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--bg-card);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
     @keyframes spin { to { transform: rotate(360deg); } }
-    
-    .error { background: #7F1D1D; border: 1px solid #EF4444; border-radius: 12px; padding: 20px; text-align: center; color: #FCA5A5; }
-    
-    .footer { text-align: center; padding: 40px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid #334155; margin-top: 40px; }
+
+    /* Alert */
+    .alert {
+      background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(239,68,68,0.1));
+      border: 1px solid var(--warning);
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .alert-icon { font-size: 1.4rem; }
+    .alert-text { flex: 1; }
+    .alert-title { font-weight: 600; color: var(--warning); font-size: 0.95rem; }
+    .alt-locations { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .alt-btn {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .alt-btn:hover { border-color: var(--secondary); }
+
+    /* Footer */
+    footer { text-align: center; padding: 30px 20px; color: var(--text-muted); font-size: 0.85rem; border-top: 1px solid var(--border); margin-top: 30px; }
+
+    @media (max-width: 600px) {
+      .location-bar { width: 100%; }
+      .search-box { max-width: 100%; }
+      .score-section { flex-direction: column; text-align: center; }
+    }
   </style>
 </head>
 <body>
-  <header>
-    <div class="container">
-      <div class="logo">🎣 <span>Pesca</span>App</div>
-      <p style="color: var(--muted); margin-top: 8px;">Pronóstico de pesca en tiempo real</p>
-      
-      <div class="search">
-        <input type="text" id="searchInput" placeholder="Ciudad (ej: La Paz, Mazatlán)"/>
-        <button onclick="searchCity()">🔍</button>
+  <div class="container">
+    <header>
+      <div class="logo">🎣 Pesca<span style="color:var(--primary)">Guide</span></div>
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Buscar ciudad..."/>
+        <button class="search-btn" onclick="searchCity()">🔍</button>
       </div>
+    </header>
+
+    <div class="location-bar">
+      <select id="locationSelect" class="location-select" onchange="selectLocation()">
+        <option value="">📍 Seleccionar ciudad...</option>
+      </select>
+      <button class="gps-btn" onclick="useGPS()">📍 GPS</button>
+      <button class="gps-btn" onclick="useCoords()">📌 Coordenadas</button>
     </div>
-  </header>
-  
-  <main class="container">
+
+    <div id="map"></div>
+
     <div id="loading" class="loading">
-      <div class="loading-spinner"></div>
-      <p>Cargando datos...</p>
+      <div class="spinner"></div>
+      <p>Cargando datos de pesca...</p>
     </div>
-    
-    <div id="error" class="error" style="display: none;">
-      <p>❌ <span id="errorMsg">Error cargando datos</span></p>
-      <button onclick="loadData(24.142, -110.310, 'La Paz')" style="margin-top: 12px; padding: 8px 16px; cursor: pointer;">Reintentar</button>
+
+    <div id="app" style="display:none;">
+      <!-- Alert for alternatives -->
+      <div id="alert" class="alert" style="display:none;">
+        <span class="alert-icon">⚠️</span>
+        <div class="alert-text">
+          <div class="alert-title" id="alertTitle"></div>
+          <div class="alt-locations" id="altLocations"></div>
+        </div>
+      </div>
+
+      <div class="hero-card">
+        <div class="location-header">
+          <div>
+            <div class="location-name" id="locName">-</div>
+            <div class="location-state" id="locState">-</div>
+          </div>
+        </div>
+
+        <div class="score-section">
+          <div class="score-circle" id="scoreCircle">
+            <div class="score-value" id="scoreValue">-</div>
+            <div class="score-max">/100</div>
+          </div>
+          <div class="score-details">
+            <div class="score-label" id="scoreLabel">Score de Pesca</div>
+            <div class="score-context" id="scoreContext"></div>
+            <div class="conditions" id="conditions"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="times-section">
+        <div class="times-title">🕐 Mejores Horarios</div>
+        <div class="times-grid" id="timesGrid"></div>
+      </div>
+
+      <div class="tides-section">
+        <div class="tides-title">🌊 Mareas Próximas</div>
+        <div class="tides-grid" id="tidesGrid"></div>
+      </div>
+
+      <div class="fish-section">
+        <div class="fish-title">🐟 Especie a Pescar</div>
+        <div class="fish-grid" id="fishGrid"></div>
+      </div>
     </div>
-    
-    <div id="app" style="display: none;">
-      <div class="location-header">
-        <div class="location-name" id="locationName">La Paz</div>
-        <div class="location-sub" id="locationSub">Baja California Sur, México</div>
-      </div>
-      
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-icon">⭐</div>
-          <div class="stat-value" id="scoreValue">-</div>
-          <div class="stat-label">Score de Pesca</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">📊</div>
-          <div class="stat-value" id="tideCoeff">-</div>
-          <div class="stat-label">Coef. Marea</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">🌡️</div>
-          <div class="stat-value" id="tempValue">-</div>
-          <div class="stat-label">Temperatura</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">💨</div>
-          <div class="stat-value" id="windValue">-</div>
-          <div class="stat-label">Viento</div>
-        </div>
-      </div>
-      
-      <div id="fishingContext" style="background: var(--card); border-left: 3px solid var(--primary); padding: 14px; border-radius: 0 8px 8px 0; margin-bottom: 24px; color: var(--muted);"></div>
-      
-      <h2 class="section-title">🌊 Mareas Próximas</h2>
-      <div class="tide-table">
-        <div class="tide-header">
-          <div>Día</div>
-          <div>1ra Marea</div>
-          <div>2da Marea</div>
-          <div>3ra Marea</div>
-        </div>
-        <div id="tideBody"></div>
-      </div>
-      
-      <h2 class="section-title">🌙 Fase Lunar</h2>
-      <div class="moon-card">
-        <div class="moon-icon" id="moonIcon">🌓</div>
-        <div class="moon-name" id="moonName">-</div>
-        <div class="moon-illum" id="moonIllum">-</div>
-      </div>
-      
-      <h2 class="section-title">🌤️ Clima Actual</h2>
-      <div class="weather-grid" id="weatherGrid"></div>
-    </div>
-  </main>
-  
-  <footer class="footer">
-    <p>🎣 Pesca App - Datos: NOAA, Open-Meteo</p>
-  </footer>
-  
+
+    <footer>
+      <p>🎣 PescaGuide - Datos de NOAA, Open-Meteo</p>
+    </footer>
+  </div>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // Data cache
-    let currentData = null;
-    
-    // Format helpers
-    function formatTime(t) {
-      if (!t) return '--:--';
-      try { return t.split(' ')[1].substring(0, 5); } catch { return '--:--'; }
+    let map, marker;
+    const CITIES = {
+      "la paz": { lat: 24.142, lon: -110.310, name: "La Paz", state: "Baja California Sur" },
+      "cabo san lucas": { lat: 22.891, lon: -109.928, name: "Cabo San Lucas", state: "Baja California Sur" },
+      "cabo": { lat: 22.891, lon: -109.928, name: "Cabo San Lucas", state: "Baja California Sur" },
+      "mazatlan": { lat: 23.225, lon: -106.420, name: "Mazatlán", state: "Sinaloa" },
+      "ensenada": { lat: 31.866, lon: -116.625, name: "Ensenada", state: "Baja California" },
+      "san felipe": { lat: 31.024, lon: -114.832, name: "San Felipe", state: "Baja California" },
+      "guaymas": { lat: 27.919, lon: -110.907, name: "Guaymas", state: "Sonora" },
+      "topolobampo": { lat: 25.615, lon: -109.055, name: "Topolobampo", state: "Sinaloa" },
+      "manzanillo": { lat: 19.054, lon: -104.318, name: "Manzanillo", state: "Colima" },
+      "tijuana": { lat: 32.515, lon: -117.069, name: "Tijuana", state: "Baja California" },
+      "cancun": { lat: 21.161, lon: -86.851, name: "Cancún", state: "Quintana Roo" },
+      "progreso": { lat: 21.283, lon: -89.667, name: "Progreso", state: "Yucatán" },
+      "tampico": { lat: 22.255, lon: -97.868, name: "Tampico", state: "Tamaulipas" },
+      "veracruz": { lat: 19.189, lon: -96.291, name: "Veracruz", state: "Veracruz" },
+      "acapulco": { lat: 16.863, lon: -99.883, name: "Acapulco", state: "Guerrero" },
+      "cozumel": { lat: 20.422, lon: -86.923, name: "Cozumel", state: "Quintana Roo" },
+      "san diego": { lat: 32.716, lon: -117.161, name: "San Diego", state: "California" },
+      "los angeles": { lat: 34.052, lon: -118.244, name: "Los Angeles", state: "California" },
+      "san francisco": { lat: 37.775, lon: -122.418, name: "San Francisco", state: "California" },
+      "miami": { lat: 25.762, lon: -80.192, name: "Miami", state: "Florida" },
+      "key west": { lat: 24.555, lon: -81.808, name: "Key West", state: "Florida" },
+      "tampa": { lat: 27.951, lon: -82.457, name: "Tampa", state: "Florida" },
+      "santa barbara": { lat: 34.421, lon: -119.702, name: "Santa Barbara", state: "California" },
+      "jacksonville": { lat: 30.332, lon: -81.656, name: "Jacksonville", state: "Florida" },
+      "playa del carmen": { lat: 20.627, lon: -87.072, name: "Playa del Carmen", state: "Quintana Roo" },
+      "merida": { lat: 20.967, lon: -89.593, name: "Mérida", state: "Yucatán" }
+    };
+
+    const FISH_ICONS = {
+      'dorado': '🐠', 'huachinango': '🐟', 'pargo': '🐟', 'cabrilla': '🐡',
+      'tuna': '🐟', 'marlin': '🦈', 'lubina': '🐡', 'robalo': '🐡',
+      'bonito': '🐟', 'trucha': '🐟', 'bagre': '🐱', 'mojarra': '🐟'
+    };
+
+    // Initialize select dropdown
+    function initSelect() {
+      const select = document.getElementById('locationSelect');
+      Object.keys(CITIES).sort().forEach(key => {
+        const city = CITIES[key];
+        const opt = document.createElement('option');
+        opt.value = key;
+        opt.textContent = `📍 ${city.name}, ${city.state}`;
+        select.appendChild(opt);
+      });
     }
-    function formatDate(t) {
-      if (!t) return '---';
-      try { 
-        const d = new Date(t);
-        return d.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' });
-      } catch { return '---'; }
+
+    // Initialize map
+    function initMap() {
+      map = L.map('map').setView([24.142, -110.310], 5);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+      }).addTo(map);
     }
-    function getMoonIcon(pct) {
-      if (pct >= 90) return '🌕';
-      if (pct >= 60) return '🌔';
-      if (pct >= 40) return '🌓';
-      if (pct >= 10) return '🌒';
-      return '🌑';
+
+    function updateMap(lat, lon, name) {
+      if (marker) map.removeLayer(marker);
+      marker = L.marker([lat, lon]).addTo(map)
+        .bindPopup(`<b>${name}</b>`)
+        .openPopup();
+      map.setView([lat, lon], 8);
     }
-    function getScoreClass(score) {
-      if (score >= 7) return 'good';
-      if (score >= 5) return 'medium';
-      return '';
+
+    function getScoreColor(score) {
+      if (score >= 75) return 'var(--success)';
+      if (score >= 50) return 'var(--warning)';
+      return 'var(--danger)';
     }
-    
-    // Main load function
-    async function loadData(lat, lon, city) {
-      console.log('Loading:', lat, lon, city);
+
+    function getRatingClass(rating) {
+      if (rating >= 8) return 'high';
+      if (rating >= 5) return 'medium';
+      return 'low';
+    }
+
+    async function loadData(cityKey) {
+      const city = CITIES[cityKey] || CITIES['la paz'];
+      
       document.getElementById('loading').style.display = 'block';
-      document.getElementById('error').style.display = 'none';
       document.getElementById('app').style.display = 'none';
       
       try {
-        const resp = await fetch('/api/forecast?lat=' + lat + '&lon=' + lon);
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const url = `/api/fish-guide?lat=${city.lat}&lon=${city.lon}&city=${encodeURIComponent(city.name)}`;
+        const resp = await fetch(url);
+        
+        if (!resp.ok) throw new Error('API error');
         
         const data = await resp.json();
-        console.log('Got data:', data.fishing_score);
-        currentData = data;
         render(data, city);
+        
+        updateMap(city.lat, city.lon, city.name);
+        
       } catch (err) {
-        console.error('Error:', err);
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('error').style.display = 'block';
-        document.getElementById('errorMsg').textContent = err.message;
+        console.error(err);
+        // Fallback: load forecast
+        try {
+          const url = `/api/forecast?lat=${city.lat}&lon=${city.lon}`;
+          const resp = await fetch(url);
+          const data = await resp.json();
+          renderFallback(data, city);
+          updateMap(city.lat, city.lon, city.name);
+        } catch(e) {
+          alert('Error cargando datos');
+        }
       }
     }
-    
-    // Render function
+
     function render(data, city) {
-      const loc = data.location || {};
-      const w = data.weather || {};
-      const sol = data.solunar || {};
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
       
       // Location
-      document.getElementById('locationName').textContent = loc.city || city || 'La Paz';
-      document.getElementById('locationSub').textContent = (loc.state || '') + ', ' + (loc.country || 'México');
+      document.getElementById('locName').textContent = city.name;
+      document.getElementById('locState').textContent = city.state || 'México';
       
-      // Stats
+      // Score
       const score = data.fishing_score || 0;
+      const degrees = (score / 100) * 360;
+      document.getElementById('scoreCircle').style.background = 
+        `conic-gradient(${getScoreColor(score)} ${degrees}deg, var(--bg-card) ${degrees}deg)`;
       document.getElementById('scoreValue').textContent = score;
-      document.getElementById('scoreValue').className = 'stat-value ' + getScoreClass(score);
-      document.getElementById('tideCoeff').textContent = data.tide_coefficient || '--';
-      document.getElementById('tempValue').textContent = (w.temperature || '--') + '°C';
-      document.getElementById('windValue').textContent = (w.wind_speed || '--') + ' km/h';
+      document.getElementById('scoreValue').style.color = getScoreColor(score);
+      document.getElementById('scoreLabel').textContent = score >= 75 ? '¡Excelente!' : score >= 50 ? 'Bueno' : 'Regular';
+      document.getElementById('scoreContext').textContent = data.fishing_context || '';
       
-      // Context
-      document.getElementById('fishingContext').textContent = data.fishing_context || '';
+      // Conditions
+      const c = data.conditions || {};
+      const badges = [
+        { icon: '🌡️', value: c.temperature + '°', good: c.temperature >= 18 && c.temperature <= 28 },
+        { icon: '💨', value: c.wind + ' km/h', good: c.wind >= 5 && c.wind <= 20 },
+        { icon: '🌊', value: c.condition || 'Despejado', good: c.condition && !c.condition.includes('Lluvia') }
+      ];
+      document.getElementById('conditions').innerHTML = badges.map(b => 
+        `<span class="condition ${b.good ? 'good' : 'warning'}">${b.icon} ${b.value}</span>`
+      ).join('');
+      
+      // Alert for alternatives
+      if (data.alert_message && data.alternative_locations?.length > 0) {
+        document.getElementById('alert').style.display = 'flex';
+        document.getElementById('alertTitle').textContent = data.alert_message;
+        document.getElementById('altLocations').innerHTML = data.alternative_locations.slice(0,3).map(a => 
+          `<button class="alt-btn" onclick="loadData('${a.id}')">${a.name} (${a.score}%)</button>`
+        ).join('');
+      } else {
+        document.getElementById('alert').style.display = 'none';
+      }
+      
+      // Best times
+      const times = data.best_times || [];
+      document.getElementById('timesGrid').innerHTML = times.map(t => 
+        `<div class="time-card">
+          <div class="time-range">${t.time}</div>
+          <div class="time-rating ${getRatingClass(t.rating)}">${t.rating}/10</div>
+        </div>`
+      ).join('');
       
       // Tides
       const tides = data.tides?.tides || [];
-      let tideHtml = '';
-      for (let i = 0; i < Math.min(3, tides.length); i++) {
-        const t = tides[i];
-        const arrow = t.type === 'high' ? '▲' : '▼';
-        tideHtml += '<div class="tide-row">' +
-          '<div class="tide-day">' + (i === 0 ? 'Hoy' : formatDate(t.time)) + '</div>' +
-          '<div><span class="tide-high">' + arrow + ' ' + formatTime(t.time) + '</span> ' + (t.height || 0) + 'm</div>' +
-          '<div></div><div></div>' +
-        '</div>';
-      }
-      if (!tideHtml) tideHtml = '<div class="tide-row"><div colspan="4">No hay datos de mareas</div></div>';
-      document.getElementById('tideBody').innerHTML = tideHtml;
+      document.getElementById('tidesGrid').innerHTML = tides.slice(0,4).map(t => {
+        const time = t.time ? t.time.split(' ')[1]?.substring(0,5) : '--:--';
+        return `<div class="tide-card">
+          <div class="tide-time">${time}</div>
+          <div class="tide-type ${t.type}">${t.type === 'high' ? '▲ Pleamar' : '▼ Bajamar'}</div>
+          <div class="tide-height">${t.height || 0}m</div>
+        </div>`;
+      }).join('') || '<p style="color:var(--text-muted)">Sin datos de mareas</p>';
       
-      // Moon
-      const illum = sol.illumination_percent || 50;
-      document.getElementById('moonIcon').textContent = getMoonIcon(illum);
-      document.getElementById('moonName').textContent = sol.moon_phase_name || 'Luna';
-      document.getElementById('moonIllum').textContent = illum + '% iluminada';
-      
-      // Weather
-      document.getElementById('weatherGrid').innerHTML = 
-        '<div class="weather-item"><div class="weather-temp">' + (w.temperature || '--') + '°C</div><div class="weather-label">Aire</div></div>' +
-        '<div class="weather-item"><div class="weather-temp">' + (w.humidity || '--') + '%</div><div class="weather-label">Humedad</div></div>' +
-        '<div class="weather-item"><div class="weather-temp">' + (w.pressure || '--') + '</div><div class="weather-label">Presión hPa</div></div>' +
-        '<div class="weather-item"><div class="weather-temp">' + (w.wind_speed || '--') + '</div><div class="weather-label">Viento km/h</div></div>';
-      
-      // Show
+      // Fish
+      const recs = data.recommendations || [];
+      document.getElementById('fishGrid').innerHTML = recs.slice(0,6).map(f => 
+        `<div class="fish-card" onclick="showFish('${f.fish_id}')">
+          <div class="fish-name">${FISH_ICONS[f.fish_id] || '🐟'} ${f.name}</div>
+          <div class="fish-info">${f.difficulty} • ${f.size_range?.substring(0,15) || ''}</div>
+          <div class="fish-score" style="color:${getScoreColor(f.score)}">${f.score}%</div>
+        </div>`
+      ).join('') || '<p style="color:var(--text-muted)">Cargando especies...</p>';
+    }
+
+    function renderFallback(data, city) {
+      // Simplified fallback for forecast API
       document.getElementById('loading').style.display = 'none';
       document.getElementById('app').style.display = 'block';
-    }
-    
-    // Search city
-    async function searchCity() {
-      const q = document.getElementById('searchInput').value.trim();
-      if (!q) return;
       
-      try {
-        const resp = await fetch('/api/geocode?q=' + encodeURIComponent(q));
-        if (resp.ok) {
-          const data = await resp.json();
-          if (data.lat && data.lon) {
-            loadData(data.lat, data.lon, data.name || q);
-            return;
+      document.getElementById('locName').textContent = city.name;
+      document.getElementById('locState').textContent = city.state || 'México';
+      
+      const score = data.fishing_score || 5;
+      const degrees = (score / 100) * 360;
+      document.getElementById('scoreCircle').style.background = 
+        `conic-gradient(${getScoreColor(score)} ${degrees}deg, var(--bg-card) ${degrees}deg)`;
+      document.getElementById('scoreValue').textContent = score;
+      document.getElementById('scoreValue').style.color = getScoreColor(score);
+      document.getElementById('scoreLabel').textContent = score >= 75 ? '¡Excelente!' : score >= 50 ? 'Bueno' : 'Regular';
+      document.getElementById('scoreContext').textContent = data.fishing_context || '';
+      
+      const w = data.weather || {};
+      document.getElementById('conditions').innerHTML = 
+        `<span class="condition good">🌡️ ${w.temperature || 22}°</span>
+         <span class="condition good">💨 ${w.wind_speed || 10} km/h</span>
+         <span class="condition good">🌊 ${w.weather_description || 'Clara'}</span>`;
+      
+      // Empty fallbacks
+      document.getElementById('timesGrid').innerHTML = '<div style="color:var(--text-muted)">Cargando horarios...</div>';
+      document.getElementById('tidesGrid').innerHTML = '<div style="color:var(--text-muted)">Cargando mareas...</div>';
+      document.getElementById('fishGrid').innerHTML = '<div style="color:var(--text-muted)">Cargando especies...</div>';
+    }
+
+    function selectLocation() {
+      const select = document.getElementById('locationSelect');
+      if (select.value) loadData(select.value);
+    }
+
+    async function searchCity() {
+      const input = document.getElementById('searchInput').value.trim().toLowerCase();
+      if (!input) return;
+      
+      // Check direct match
+      if (CITIES[input]) {
+        loadData(input);
+        return;
+      }
+      
+      // Search in keys
+      const match = Object.keys(CITIES).find(k => k.includes(input));
+      if (match) {
+        loadData(match);
+        document.getElementById('searchInput').value = '';
+      } else {
+        // Try API
+        try {
+          const resp = await fetch(`/api/search?q=${encodeURIComponent(input)}`);
+          const results = await resp.json();
+          if (results.length > 0) {
+            const r = results[0];
+            const key = r.name.toLowerCase().replace(/ /g, '_');
+            if (!CITIES[key]) {
+              CITIES[key] = { lat: r.lat, lon: r.lon, name: r.name, state: r.state };
+            }
+            loadData(key);
+          } else {
+            alert('Ciudad no encontrada');
           }
+        } catch(e) {
+          alert('Error buscando');
         }
-        alert('Ciudad no encontrada: ' + q);
-      } catch (err) {
-        alert('Error buscando: ' + err.message);
       }
     }
-    
+
+    function showFish(fishId) {
+      alert('🦈 Información de: ' + fishId + '\n\nEsta función mostrará detalles de la especie.');
+    }
+
+    function useGPS() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+          loadDataByCoords(pos.coords.latitude, pos.coords.longitude);
+        }, () => alert('No se pudo obtener ubicación'));
+      }
+    }
+
+    function useCoords() {
+      const input = prompt('Ingresa lat,lon (ej: 24.142,-110.310)');
+      if (input) {
+        const [lat, lon] = input.split(',').map(Number);
+        if (!isNaN(lat) && !isNaN(lon)) {
+          loadDataByCoords(lat, lon);
+        }
+      }
+    }
+
+    function loadDataByCoords(lat, lon) {
+      // Find nearest city
+      let nearest = null;
+      let minDist = Infinity;
+      Object.entries(CITIES).forEach(([key, city]) => {
+        const dist = Math.abs(city.lat - lat) + Math.abs(city.lon - lon);
+        if (dist < minDist) {
+          minDist = dist;
+          nearest = key;
+        }
+      });
+      if (nearest) loadData(nearest);
+    }
+
     // Keyboard search
-    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+    document.getElementById('searchInput').addEventListener('keypress', e => {
       if (e.key === 'Enter') searchCity();
     });
-    
-    // Auto-load on init
-    window.onload = function() {
-      console.log('Init...');
-      loadData(24.142, -110.310, 'La Paz');
-    };
+
+    // Init
+    initSelect();
+    initMap();
+    loadData('la paz');
   </script>
 </body>
 </html>
