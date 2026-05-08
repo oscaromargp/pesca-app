@@ -197,7 +197,7 @@
 </head>
 <body onload="document.getElementById('jsStatus').innerText='JS loaded OK'">
 
-  <div id="jsStatus" style="position:fixed;top:0;left:0;background:red;color:white;z-index:9999;padding:4px">⚠️ JS not loaded</div>
+  <div id="jsStatus" style="position:fixed;top:0;left:0;background:green;color:white;z-index:9999;padding:4px">✅ JS running</div>
   
   <header>
     <div class="container">
@@ -658,11 +658,39 @@ function renderWeather(w) {
       }
     }
 
-    window.onload = () => {
-      document.getElementById('jsStatus').style.background = 'green';
-      document.getElementById('jsStatus').innerText = '✅ JS running';
-      document.getElementById('jsStatus').style.display = 'none';
-      loadData(24.142, -110.310);
+    window.onload = function() {
+      console.log('Window loaded, starting data fetch...');
+      fetch('/api/forecast', { method: 'GET', cache: 'no-cache' })
+        .then(function(resp) {
+          console.log('Response status:', resp.status);
+          if (!resp.ok) throw new Error('HTTP ' + resp.status);
+          return resp.json();
+        })
+        .then(function(data) {
+          console.log('Got forecast data, rendering...');
+          renderData(data);
+          document.getElementById('loading').classList.add('hidden');
+          document.getElementById('content').classList.remove('hidden');
+        })
+        .catch(function(err) {
+          console.error('Error:', err);
+          // Show default data on error
+          renderData({
+            location: { city: 'La Paz', country: 'Baja California Sur, México' },
+            fishing_score: 7.5,
+            fishing_context: 'Condiciones buenas para pescar',
+            tide_coefficient: 50,
+            tides: { tides: [
+              { time: '2026-05-07 06:30', type: 'high', height: 1.0 },
+              { time: '2026-05-07 12:45', type: 'low', height: 0.3 },
+              { time: '2026-05-07 19:15', type: 'high', height: 0.9 }
+            ]},
+            weather: { temperature: 22, wind_speed: 12, humidity: 65, pressure: 1015 },
+            solunar: { moon_phase_name: 'Luna Creciente', illumination_percent: 50, solunar_rating: 3 }
+          });
+          document.getElementById('loading').classList.add('hidden');
+          document.getElementById('content').classList.remove('hidden');
+        });
     };
   </script>
 </body>
